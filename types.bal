@@ -1,10 +1,10 @@
 import ballerina/time;
 import ballerina/http;
+import ballerina/constraint;
 
 // Error related records
 type ErrorDetails record {|
     string msg;
-    string details;
     time:Utc timeStamp;
 |};
 
@@ -13,7 +13,12 @@ type NotFoundResponse record {|
     ErrorDetails body;
 |};
 
-// User related records
+type DeletedResponse record {|
+    *http:Ok;
+    string body;
+|};
+
+// User related records 
 type User record {|
     readonly string userId;
     string name;
@@ -25,8 +30,18 @@ type User record {|
 
 // New User and Update User
 type ModifyUser record {|
+    @constraint:String {
+        minLength: 2,
+        maxLength: 50
+    }
     string name;
+    @constraint:String {
+        pattern: re `/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/`
+    }
     string email;
+    @constraint:String {
+        pattern: re `^\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$`
+    }
     string phoneNumber;
 |};
 
@@ -40,7 +55,13 @@ type API record {|
 
 // New API and Update API
 type ModifyAPI record {|
+    @constraint:String {
+        maxLength: 100
+    }
     string name;
+    @constraint:String {
+        pattern: re `https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`
+    }
     string apiURL;
 |};
 
