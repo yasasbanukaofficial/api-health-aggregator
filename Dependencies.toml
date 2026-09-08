@@ -373,7 +373,7 @@ modules = [
 
 [[package]]
 org = "bezerk"
-name = "api_health_monitor"
+name = "api_health_aggregator"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "http"},
@@ -385,6 +385,6 @@ dependencies = [
 	{org = "ballerinax", name = "mysql.driver"}
 ]
 modules = [
-	{org = "bezerk", packageName = "api_health_monitor", moduleName = "api_health_monitor"}
+	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator"}
 ]
 
