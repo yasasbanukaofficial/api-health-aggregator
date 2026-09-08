@@ -1,6 +1,7 @@
 import ballerina/time;
 import ballerina/http;
 import ballerina/constraint;
+import ballerina/sql;
 
 // Error related records
 type ErrorDetails record {|
@@ -20,11 +21,21 @@ type DeletedResponse record {|
 
 // User related records 
 type User record {|
+    @sql:Column {
+        name: "user_id"
+    }
     readonly string userId;
     string name;
     string email;
+
+    @sql:Column {
+        name: "phone_number"
+    }
     string phoneNumber;
 
+    @sql:Column {
+        name: "created_time"
+    }
     time:Date createdTime;
 |};
 
@@ -47,9 +58,22 @@ type ModifyUser record {|
 
 // API related records
 type API record {|
+    @sql:Column {
+        name: "api_id"
+    }
     readonly string apiId;
+    @sql:Column {
+        name: "api_name"
+    }
     string name;
+
+    @sql:Column {
+        name: "api_url"
+    }
     string apiURL;
+    @sql:Column {
+        name: "created_time"
+    }
     time:Date createdTime;
 |};
 
