@@ -1,6 +1,6 @@
 [package]
 org = "bezerk"
-name = "api_health_monitor"
+name = "api_health_aggregator"
 version = "0.1.0"
 distribution = "2201.13.5"
 
