@@ -7,7 +7,7 @@ CREATE TABLE api_health_aggregator.api (
     created_time DATE
 );
 
-CREATE TABLE api_health_aggregator.users (
+CREATE TABLE api_health_aggregator.user (
     user_id CHAR(36) PRIMARY KEY,
     user_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
@@ -44,7 +44,7 @@ VALUES
      '2026-09-05');
 
 
-INSERT INTO api_health_aggregator.users
+INSERT INTO api_health_aggregator.user
     (user_id, user_name, email, phone_number, created_time)
 VALUES
     ('550e8400-e29b-41d4-a716-446655440001',

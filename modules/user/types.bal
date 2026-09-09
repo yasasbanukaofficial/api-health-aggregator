@@ -8,6 +8,9 @@ public type User record {|
         name: "user_id"
     }
     readonly string userId;
+    @sql:Column {
+        name: "user_name"
+    }
     string name;
     string email;
 
