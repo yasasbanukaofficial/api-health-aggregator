@@ -2,7 +2,7 @@ CREATE TABLE api_health_aggregator.api (
     -- CHAR means fixed-length characters
     api_id CHAR(36) PRIMARY KEY,
     -- VARCHAR means variable-length characters
-    api_name VARCHAR(100) NOT NULL,
+    api_name VARCHAR(100) UNIQUE NOT NULL,
     api_url VARCHAR(100) NOT NULL,
     created_time DATE
 );
