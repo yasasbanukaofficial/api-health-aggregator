@@ -43,14 +43,25 @@ function getUserByEmail(string email) returns User|error {
     }
 }
 
-function createUser(string newId, ModifyUser modifyUser) returns User|error {
+function createUser(string newId, ModifyUser modifyUser) returns error? {
     do {
-        User|sql:Error user = database:apiHealthDB->queryRow(`
-            INSERT INTO user 
-            VALUES (${newId}, ${modifyUser.name}, ${modifyUser.email}, ${modifyUser.phoneNumber}, ${modifyUser.password}, ${time:utcNow()});`);
-        return user;
-    } on fail var err {
-        io:println("Failed to create user:  ", err.message());
+        sql:ExecutionResult result = check database:apiHealthDB->execute(`
+            INSERT INTO user
+            VALUES (
+                ${newId},
+                ${modifyUser.name},
+                ${modifyUser.email},
+                ${modifyUser.phoneNumber},
+                ${modifyUser.password},
+                ${time:utcNow()}
+            )
+        `);
+
+        if result.affectedRowCount == 0 {
+            return error("SQL error when creating the user");
+        }
+    } on fail error err {
+        io:println("Failed to create user: ", err.message());
         return err;
     }
 }
@@ -63,7 +74,7 @@ function updateUser(string id, ModifyUser modifyUser) returns User|error {
             WHERE user_id = ${id}`);
 
         if result.affectedRowCount == 0 {
-            return error(string `User with the id: ${id} not found`);
+            return error(string `SQL error when modifying user with the id: ${id} not found`);
         }
 
         User updatedUser = check database:apiHealthDB->queryRow(`SELECT * FROM user WHERE user_id = ${id}`);
@@ -81,7 +92,7 @@ function deleteUser(string id) returns error? {
             DELETE FROM user WHERE user_id = ${id}`);
 
         if result.affectedRowCount == 0 {
-            return error(string `User with the id: ${id} not found`);
+            return error(string `SQL error when modifying user with the id: ${id} not found`);
         }
 
     } on fail error err {
