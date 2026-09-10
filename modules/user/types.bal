@@ -27,14 +27,14 @@ public type User record {|
 |};
 
 // New User and Update User
-public type ModifyUser record {
+public type ModifyUser record {|
     @constraint:String {
         minLength: 2,
         maxLength: 50
     }
     string name;
     @constraint:String {
-        pattern: re `/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/`
+        pattern: re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
     }
     string email;
     @constraint:String {
@@ -42,10 +42,16 @@ public type ModifyUser record {
     }
     string phoneNumber;
     string password;
-};
+|};
 
+public type AuthUser record {|
+    string email;
+    string password;
+|};
 public type UserResponse record {|
-    *ModifyUser;
-    string id;
-    string jwtToken;
+    readonly string userId;
+    string name;
+    string email;
+    string phoneNumber;
+    string? jwtToken = ();
 |};
