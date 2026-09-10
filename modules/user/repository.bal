@@ -47,7 +47,7 @@ function createUser(string newId, ModifyUser modifyUser) returns User|error {
     do {
         User|sql:Error user = database:apiHealthDB->queryRow(`
             INSERT INTO user 
-            VALUES (${newId}, ${modifyUser.name}, ${modifyUser.email}, ${modifyUser.phoneNumber}, ${time:utcNow()});`);
+            VALUES (${newId}, ${modifyUser.name}, ${modifyUser.email}, ${modifyUser.phoneNumber}, ${modifyUser.password}, ${time:utcNow()});`);
         return user;
     } on fail var err {
         io:println("Failed to create user:  ", err.message());
@@ -59,7 +59,7 @@ function updateUser(string id, ModifyUser modifyUser) returns User|error {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(`
             UPDATE user 
-            SET name = ${modifyUser.name}, email = ${modifyUser.email}, phone_number = ${modifyUser.phoneNumber}
+            SET name = ${modifyUser.name}, email = ${modifyUser.email}, phone_number = ${modifyUser.phoneNumber}, password = ${modifyUser.password}
             WHERE user_id = ${id}`);
 
         if result.affectedRowCount == 0 {
