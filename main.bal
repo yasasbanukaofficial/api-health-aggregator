@@ -1,10 +1,12 @@
+import api_health_aggregator.api;
+import api_health_aggregator.common;
+import api_health_aggregator.user;
+
 import ballerina/http;
 import ballerina/io;
-import api_health_aggregator.api;
-import api_health_aggregator.user;
-import api_health_aggregator.common;
 
 configurable int SERVICE_PORT = ?;
+configurable string JWT_SECRET = ?;
 
 listener http:Listener serviceListener = new (SERVICE_PORT);
 
@@ -18,6 +20,12 @@ service / on serviceListener {
     }
 }
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://localhost:3000/"]
+    },
+    auth: [{jwtValidatorConfig: {...common:validatorConfig}}]
+}
 service /api on serviceListener {
     resource function get .(string? id) returns api:API|api:API[]|api:ApiError {
         if id is string {
@@ -40,6 +48,22 @@ service /api on serviceListener {
     }
 }
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://localhost:3000/"]
+    },
+    auth: [
+        {
+            jwtValidatorConfig: {
+                issuer: "doeCompany",
+                audience: "apiAud",
+                signatureConfig: {
+                    secret: JWT_SECRET
+                }
+            }
+        }
+    ]
+}
 service /user on serviceListener {
     resource function get .(string? id) returns user:User|user:User[]|user:UserError {
 
@@ -50,15 +74,15 @@ service /user on serviceListener {
         return user:getAll();
     }
 
-    resource function post users(user:ModifyUser modifyUser) returns user:User|user:UserError {
-        return user:create(modifyUser);
+    resource function post register(user:ModifyUser modifyUser) returns user:User|user:UserError {
+        return user:register(modifyUser);
     }
 
-    resource function put users/[string id](user:ModifyUser modifyUser) returns user:User|user:UserError {
+    resource function put update/[string id](user:ModifyUser modifyUser) returns user:User|user:UserError {
         return user:update(id, modifyUser);
     }
 
-    resource function delete users/[string id]() returns common:DeletedResponse|user:UserError {
+    resource function delete delete/[string id]() returns common:DeletedResponse|user:UserError {
         return user:delete(id);
     }
 }
