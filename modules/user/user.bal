@@ -1,5 +1,6 @@
 import ballerina/time;
 import api_health_aggregator.common;
+import api_health_aggregator.utils;
 
 public function getAll() returns User[]|ExecutionError|error {
     User[]|error users = check getAllUsers();
@@ -31,7 +32,7 @@ public function register(ModifyUser modifyUser) returns User|UserAlreadyExists|E
         };
     }
 
-    string newId = common:generateUUID();
+    string newId = utils:generateUUID();
 
     User|error newUser = check createUser(newId, modifyUser);
 
@@ -53,7 +54,7 @@ public function login(string id) returns UserResponse|ExecutionError|error {
         };
     }
 
-    string|error jwtToken = check common:generateJwt(existingUser.userId);
+    string|error jwtToken = check utils:generateJwt(existingUser.userId);
 
     if jwtToken is error {
         return <ExecutionError> {

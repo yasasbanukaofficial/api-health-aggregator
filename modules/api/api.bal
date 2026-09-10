@@ -1,5 +1,6 @@
 import ballerina/time;
 import api_health_aggregator.common;
+import api_health_aggregator.utils;
 
 public function getAll() returns API[]|ApiNotFound|error {
     API[]|error apis = check getAllApi();
@@ -31,7 +32,7 @@ public function create(ModifyAPI modifyAPI) returns API|ApiAlreadyExists|Executi
         };
     }
 
-    string newId = common:generateUUID();
+    string newId = utils:generateUUID();
 
     API|error newApi = check createApi(newId, modifyAPI);
 
