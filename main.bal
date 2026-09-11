@@ -4,6 +4,8 @@ import api_health_aggregator.user;
 
 import ballerina/http;
 import ballerina/io;
+import ballerina/jwt;
+import ballerina/time;
 
 configurable int SERVICE_PORT = ?;
 
@@ -114,9 +116,28 @@ service /user on serviceListener {
             }
         ]
     }
-    resource function put update(@http:Header string authorization, user:ModifyUser modifyUser) returns user:User|user:UserError {
-        string token = authorization.startsWith("Bearer ") ? authorization.substring(7): authorization;
-        return user:update(token, modifyUser);
+    resource function put update(
+        http:RequestContext ctx,
+        user:ModifyUser modifyUser
+    ) returns user:User|user:UserError {
+
+        [jwt:Header, jwt:Payload] jwtInformation =
+            check ctx.getWithType(http:JWT_INFORMATION);
+
+        jwt:Payload payload = jwtInformation[1];
+        string? userId = payload.sub;
+
+        if userId is () {
+            return <user:ExecutionError>{
+                body: {
+                    msg: "Error when updating user",
+                    details: "Invalid token",
+                    timeStamp: time:utcNow()
+                }
+            };
+        }
+
+        return user:update(userId, modifyUser);
     }
 
     @http:ResourceConfig{
@@ -128,8 +149,25 @@ service /user on serviceListener {
             }
         ]
     }
-    resource function delete delete(@http:Header string authorization) returns common:DeletedResponse|user:UserError {
-        string token = authorization.startsWith("Bearer ") ? authorization.substring(7): authorization;
-        return user:delete(token);
+    resource function delete delete(http:RequestContext ctx)
+            returns common:DeletedResponse|user:UserError {
+
+        [jwt:Header, jwt:Payload] jwtInformation =
+            check ctx.getWithType(http:JWT_INFORMATION);
+
+        jwt:Payload payload = jwtInformation[1];
+        string? userId = payload.sub;
+
+        if userId is () {
+            return <user:ExecutionError>{
+                body: {
+                    msg: "Error when deleting user",
+                    details: "Invalid token",
+                    timeStamp: time:utcNow()
+                }
+            };
+        }
+
+        return user:delete(userId);
     }
 }
