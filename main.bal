@@ -104,8 +104,8 @@ service /api on serviceListener {
     }
 }
 service /user on serviceListener {
-    resource function post register(user:ModifyUser modifyUser) returns user:UserResponse|user:UserError {
-        return user:register(modifyUser);
+    resource function post register(user:NewUser newUser) returns user:UserResponse|user:UserError {
+        return user:register(newUser);
     }
 
     resource function post login(user:AuthUser authUser) returns user:UserResponse|user:UserError {
@@ -127,6 +127,20 @@ service /user on serviceListener {
     ) returns user:User|user:UserError {
         string userId = check utils:getUserIdFromContext(ctx);
         return user:update(userId, modifyUser);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function put password(http:RequestContext ctx, user:UpdatePassword updatePassword) returns user:User|user:UserError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return user:updatePassword(userId, updatePassword);
     }
 
     @http:ResourceConfig{

@@ -26,20 +26,25 @@ public function get(string id) returns User|ExecutionError|error {
     return user;
 }
 
-public function register(ModifyUser modifyUser) returns UserResponse|UserError|error {
+public function register(NewUser newUser) returns UserResponse|UserError|error {
 
-    if getUserByEmail(modifyUser.email) is User {
+    if isUserExisting(newUser.email, newUser.phoneNumber) is true {
         return <UserAlreadyExists>{
-            body: {msg: "Error when creating user", details: string `User already exists with the email ${modifyUser.email}`, timeStamp: time:utcNow()}
+            body: {msg: "Error when creating user", details: string `User already exists with the email ${newUser.email}`, timeStamp: time:utcNow()}
         };
     }
 
     string newId = utils:generateUUID();
-    
-    string hashedPassword = check crypto:hashBcrypt(modifyUser.password);
-    modifyUser.password = hashedPassword;
-    
-    error? createError = createUser(newId, modifyUser);
+
+    ModifyUser modifyUser = {
+        name: newUser.name,
+        email: newUser.email,
+        phoneNumber: newUser.phoneNumber
+    };
+
+    string hashedPassword = check crypto:hashBcrypt(newUser.password);
+
+    error? createError = createUser(newId, modifyUser, hashedPassword);
 
     if createError is error {
         return <ExecutionError>{
@@ -82,11 +87,57 @@ public function login(AuthUser authUser) returns UserResponse|ExecutionError|err
 
 
 public function update(string userId, ModifyUser modifyUser) returns User|ExecutionError|error {
+    if isUserExisting(modifyUser.email, modifyUser.phoneNumber) is true {
+        return <ExecutionError>{
+            body: {
+                msg: "Error when updating user",
+                details: "Update cannot happen because this email or phone number already exists.",
+                timeStamp: time:utcNow()
+            }
+        };
+    }
+    
     User|error updatedUser = updateUser(userId, modifyUser);
 
     if updatedUser is error {
         return <ExecutionError> {
             body: {msg: "Error when updating user", details: updatedUser.message(), timeStamp: time:utcNow()}
+        };
+    }
+
+    return updatedUser;
+}
+
+public function updatePassword(string userId, UpdatePassword updatePassword) returns User|ExecutionError|error {
+    User|error existingUser = getUser(userId);
+
+    if existingUser is error {
+        return <ExecutionError>{
+            body: {msg: "Error when updating user password", details: existingUser.message(), timeStamp: time:utcNow()}
+        };
+    }
+
+    if check crypto:verifyBcrypt(updatePassword.password, existingUser.password) is true {
+        return <ExecutionError>{
+            body: {msg: "Error when updating user password", details: "New password cannot be the same as the current password", timeStamp: time:utcNow()}
+        };
+    }
+
+    string hashedPassword = check crypto:hashBcrypt(updatePassword.password);
+
+    error? updateError = updateUserPassword(userId, hashedPassword);
+
+    if updateError is error {
+        return <ExecutionError>{
+            body: {msg: "Error when updating user password", details: updateError.message(), timeStamp: time:utcNow()}
+        };
+    }
+
+    User|error updatedUser = getUser(userId);
+
+    if updatedUser is error {
+        return <ExecutionError>{
+            body: {msg: "Error when updating user password", details: updatedUser.message(), timeStamp: time:utcNow()}
         };
     }
 
