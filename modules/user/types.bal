@@ -23,7 +23,7 @@ public type User record {|
     @sql:Column {
         name: "created_time"
     }
-    time:Date createdTime;
+    time:Civil createdTime;
 |};
 
 // New User and Update User

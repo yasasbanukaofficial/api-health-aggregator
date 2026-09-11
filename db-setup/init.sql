@@ -17,7 +17,7 @@ CREATE TABLE api_health_aggregator.user (
     created_time DATETIME
 );
 
-INSERT INTO api_health_aggregator.app_user
+INSERT INTO api_health_aggregator.user
     (user_id, user_name, email, phone_number, password, created_time)
 VALUES
     ('550e8400-e29b-41d4-a716-446655440001', 'Yasas', 'yasas@example.com', '+94771234567', 'password123', '2026-09-01 09:00:00'),
