@@ -18,6 +18,7 @@ public type User record {|
         name: "phone_number"
     }
     string phoneNumber;
+    string password;
 
     @sql:Column {
         name: "created_time"
@@ -33,11 +34,24 @@ public type ModifyUser record {|
     }
     string name;
     @constraint:String {
-        pattern: re `/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/`
+        pattern: re `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
     }
     string email;
     @constraint:String {
         pattern: re `^\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$`
     }
     string phoneNumber;
+    string password;
+|};
+
+public type AuthUser record {|
+    string email;
+    string password;
+|};
+public type UserResponse record {|
+    readonly string userId;
+    string name;
+    string email;
+    string phoneNumber;
+    string? jwtToken = ();
 |};

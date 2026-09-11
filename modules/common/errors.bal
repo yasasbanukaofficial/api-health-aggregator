@@ -4,7 +4,7 @@ import ballerina/http;
 // Error related records
 public type ErrorDetails record {|
     string msg;
-    string details;
+    string details?;
     time:Utc timeStamp;
 |};
 

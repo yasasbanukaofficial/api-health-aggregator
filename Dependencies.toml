@@ -49,6 +49,9 @@ dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "time"}
 ]
+modules = [
+	{org = "ballerina", packageName = "crypto", moduleName = "crypto"}
+]
 
 [[package]]
 org = "ballerina"
@@ -133,6 +136,9 @@ dependencies = [
 	{org = "ballerina", name = "lang.string"},
 	{org = "ballerina", name = "log"},
 	{org = "ballerina", name = "time"}
+]
+modules = [
+	{org = "ballerina", packageName = "jwt", moduleName = "jwt"}
 ]
 
 [[package]]
@@ -383,8 +389,10 @@ name = "api_health_aggregator"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "constraint"},
+	{org = "ballerina", name = "crypto"},
 	{org = "ballerina", name = "http"},
 	{org = "ballerina", name = "io"},
+	{org = "ballerina", name = "jwt"},
 	{org = "ballerina", name = "sql"},
 	{org = "ballerina", name = "time"},
 	{org = "ballerina", name = "uuid"},
@@ -397,7 +405,7 @@ modules = [
 	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.api"},
 	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.common"},
 	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.database"},
-	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.health"},
-	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.user"}
+	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.user"},
+	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.utils"}
 ]
 
