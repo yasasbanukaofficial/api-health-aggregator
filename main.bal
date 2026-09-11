@@ -1,11 +1,10 @@
 import api_health_aggregator.api;
 import api_health_aggregator.common;
 import api_health_aggregator.user;
+import api_health_aggregator.utils;
 
 import ballerina/http;
 import ballerina/io;
-import ballerina/jwt;
-import ballerina/time;
 
 configurable int SERVICE_PORT = ?;
 
@@ -36,8 +35,9 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function get .() returns api:API|api:API[]|api:ApiError {
-        return api:getAll();
+    resource function get .(http:RequestContext ctx) returns api:API|api:API[]|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:getAll(userId);
     }
 
     @http:ResourceConfig{
@@ -49,8 +49,9 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function get api/[string id]() returns api:API|api:ApiError {
-        return api:get(id);
+    resource function get api/[string id](http:RequestContext ctx) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:get(userId, id);
     }
 
     @http:ResourceConfig{
@@ -62,8 +63,9 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function post api(api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
-        return api:create(modifyAPI);
+    resource function post api(http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:create(userId, modifyAPI);
     }
 
     @http:ResourceConfig{
@@ -75,8 +77,9 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function put api/[string id](api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
-        return api:update(id, modifyAPI);
+    resource function put api/[string id](http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:update(userId, id, modifyAPI);
     }
 
     @http:ResourceConfig{
@@ -88,8 +91,10 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function delete api/[string id]() returns common:DeletedResponse|api:ApiError {
-        return api:delete(id);
+    resource function delete api/[string id](http:RequestContext ctx)
+            returns common:DeletedResponse|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:delete(userId, id);
     }
 }
 
@@ -120,23 +125,7 @@ service /user on serviceListener {
         http:RequestContext ctx,
         user:ModifyUser modifyUser
     ) returns user:User|user:UserError {
-
-        [jwt:Header, jwt:Payload] jwtInformation =
-            check ctx.getWithType(http:JWT_INFORMATION);
-
-        jwt:Payload payload = jwtInformation[1];
-        string? userId = payload.sub;
-
-        if userId is () {
-            return <user:ExecutionError>{
-                body: {
-                    msg: "Error when updating user",
-                    details: "Invalid token",
-                    timeStamp: time:utcNow()
-                }
-            };
-        }
-
+        string userId = check utils:getUserIdFromContext(ctx);
         return user:update(userId, modifyUser);
     }
 
@@ -151,23 +140,7 @@ service /user on serviceListener {
     }
     resource function delete delete(http:RequestContext ctx)
             returns common:DeletedResponse|user:UserError {
-
-        [jwt:Header, jwt:Payload] jwtInformation =
-            check ctx.getWithType(http:JWT_INFORMATION);
-
-        jwt:Payload payload = jwtInformation[1];
-        string? userId = payload.sub;
-
-        if userId is () {
-            return <user:ExecutionError>{
-                body: {
-                    msg: "Error when deleting user",
-                    details: "Invalid token",
-                    timeStamp: time:utcNow()
-                }
-            };
-        }
-
+        string userId = check utils:getUserIdFromContext(ctx);
         return user:delete(userId);
     }
 }

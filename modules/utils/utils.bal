@@ -1,4 +1,5 @@
 import ballerina/uuid;
+import ballerina/http;
 import ballerina/jwt;
 import api_health_aggregator.common;
 
@@ -17,4 +18,17 @@ public function generateJwt(string userId) returns string|error {
     } on fail error e {
         return (error("Error when generating JWT: " + e.message()));
     }
+}
+
+public function getUserIdFromContext(http:RequestContext ctx) returns string|error {
+    [jwt:Header, jwt:Payload] jwtInformation =
+        check ctx.getWithType(http:JWT_INFORMATION);
+
+    jwt:Payload payload = jwtInformation[1];
+    string? userId = payload.sub;
+
+    if userId is () {
+        return error("Invalid token");
+    }
+    return userId;
 }

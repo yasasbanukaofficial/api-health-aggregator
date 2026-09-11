@@ -2,7 +2,7 @@ import ballerina/time;
 import api_health_aggregator.common;
 import api_health_aggregator.utils;
 
-public function getAll() returns API[]|ApiNotFound|error {
+public function getAll(string userId) returns API[]|ApiNotFound|error {
     API[]|error apis = check getAllApi();
 
     if apis is error {
@@ -13,7 +13,7 @@ public function getAll() returns API[]|ApiNotFound|error {
     return apis;
 }
 
-public function get(string id) returns API|ApiNotFound|error {
+public function get(string userId, string id) returns API|ApiNotFound|error {
     API|error api = check getApi(id);
 
     if api is error {
@@ -24,7 +24,7 @@ public function get(string id) returns API|ApiNotFound|error {
     return api;
 }
 
-public function create(ModifyAPI modifyAPI) returns API|ApiAlreadyExists|ExecutionError|error {
+public function create(string userId, ModifyAPI modifyAPI) returns API|ApiAlreadyExists|ExecutionError|error {
 
     if getApiByName(modifyAPI.name) is API {
         return <ApiAlreadyExists>{
@@ -46,7 +46,7 @@ public function create(ModifyAPI modifyAPI) returns API|ApiAlreadyExists|Executi
 
 }
 
-public function update(string id, ModifyAPI modifyAPI) returns API|ApiNotFound|ExecutionError|error {
+public function update(string userId, string id, ModifyAPI modifyAPI) returns API|ApiNotFound|ExecutionError|error {
     API|error updatedApi = check updateApi(id, modifyAPI);
 
     if updatedApi is error {
@@ -63,7 +63,7 @@ public function update(string id, ModifyAPI modifyAPI) returns API|ApiNotFound|E
     return updatedApi;
 }
 
-public function delete(string id) returns common:DeletedResponse|ApiNotFound|ExecutionError|error {
+public function delete(string userId, string id) returns common:DeletedResponse|ApiNotFound|ExecutionError|error {
     error? result = check deleteApi(id);
 
     if result is error {
