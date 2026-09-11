@@ -11,8 +11,7 @@ public function validateJwt(string jwtToken) returns jwt:Payload|error {
 
 public function generateJwt(string userId) returns string|error {
     do {
-        jwt:IssuerConfig config = common:issueConfig;
-        config.username = userId;
+        jwt:IssuerConfig config = {...common:issueConfig, username: userId};
         string token = check jwt:issue(config);
         return token;
     } on fail error e {
