@@ -1,6 +1,7 @@
 import api_health_aggregator.api;
 import api_health_aggregator.common;
 import api_health_aggregator.user;
+import api_health_aggregator.utils;
 
 import ballerina/http;
 import ballerina/io;
@@ -34,8 +35,9 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function get .() returns api:API|api:API[]|api:ApiError {
-        return api:getAll();
+    resource function get .(http:RequestContext ctx) returns api:API|api:API[]|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:getAll(userId);
     }
 
     @http:ResourceConfig{
@@ -47,8 +49,9 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function get api/[string id]() returns api:API|api:ApiError {
-        return api:get(id);
+    resource function get api/[string id](http:RequestContext ctx) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:get(userId, id);
     }
 
     @http:ResourceConfig{
@@ -60,8 +63,9 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function post api(api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
-        return api:create(modifyAPI);
+    resource function post api(http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:create(userId, modifyAPI);
     }
 
     @http:ResourceConfig{
@@ -73,8 +77,9 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function put api/[string id](api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
-        return api:update(id, modifyAPI);
+    resource function put api/[string id](http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:update(userId, id, modifyAPI);
     }
 
     @http:ResourceConfig{
@@ -86,8 +91,10 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function delete api/[string id]() returns common:DeletedResponse|api:ApiError {
-        return api:delete(id);
+    resource function delete api/[string id](http:RequestContext ctx)
+            returns common:DeletedResponse|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:delete(userId, id);
     }
 }
 
@@ -97,8 +104,8 @@ service /api on serviceListener {
     }
 }
 service /user on serviceListener {
-    resource function post register(user:ModifyUser modifyUser) returns user:UserResponse|user:UserError {
-        return user:register(modifyUser);
+    resource function post register(user:NewUser newUser) returns user:UserResponse|user:UserError {
+        return user:register(newUser);
     }
 
     resource function post login(user:AuthUser authUser) returns user:UserResponse|user:UserError {
@@ -114,9 +121,12 @@ service /user on serviceListener {
             }
         ]
     }
-    resource function put update(@http:Header string authorization, user:ModifyUser modifyUser) returns user:User|user:UserError {
-        string token = authorization.startsWith("Bearer ") ? authorization.substring(7): authorization;
-        return user:update(token, modifyUser);
+    resource function put update(
+        http:RequestContext ctx,
+        user:ModifyUser modifyUser
+    ) returns user:User|user:UserError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return user:update(userId, modifyUser);
     }
 
     @http:ResourceConfig{
@@ -128,8 +138,23 @@ service /user on serviceListener {
             }
         ]
     }
-    resource function delete delete(@http:Header string authorization) returns common:DeletedResponse|user:UserError {
-        string token = authorization.startsWith("Bearer ") ? authorization.substring(7): authorization;
-        return user:delete(token);
+    resource function put password(http:RequestContext ctx, user:UpdatePassword updatePassword) returns user:User|user:UserError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return user:updatePassword(userId, updatePassword);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function delete delete(http:RequestContext ctx)
+            returns common:DeletedResponse|user:UserError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return user:delete(userId);
     }
 }

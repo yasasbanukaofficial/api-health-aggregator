@@ -23,7 +23,7 @@ public type User record {|
     @sql:Column {
         name: "created_time"
     }
-    time:Date createdTime;
+    time:Civil createdTime;
 |};
 
 // New User and Update User
@@ -41,6 +41,18 @@ public type ModifyUser record {|
         pattern: re `^\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$`
     }
     string phoneNumber;
+|};
+
+public type NewUser record {|
+    *ModifyUser;
+    string password;
+|};
+
+public type UpdatePassword record {|
+    @constraint:String {
+        minLength: 8,
+        maxLength: 72
+    }
     string password;
 |};
 
