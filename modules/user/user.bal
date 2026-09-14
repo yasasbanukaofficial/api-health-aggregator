@@ -2,19 +2,7 @@ import ballerina/time;
 import api_health_aggregator.common;
 import api_health_aggregator.utils;
 import ballerina/crypto;
-
-public function getAll() returns User[]|ExecutionError|error {
-    User[]|error users = getAllUsers();
-    
-    if users is error {
-        return {
-            body: {msg: string `Error when fetching users`, details: users.message(), timeStamp: time:utcNow()}
-        };
-    }
-    return users;
-}
-
-public function get(string id) returns User|ExecutionError|error {
+public function get(string id) returns UserResponse|UserError|error {
     User|error user = getUser(id);
 
     if user is error {
@@ -23,7 +11,7 @@ public function get(string id) returns User|ExecutionError|error {
         };
     }
 
-    return user;
+    return mapToUserResponseFromUser(user, "");
 }
 
 public function register(NewUser newUser) returns UserResponse|UserError|error {
@@ -35,16 +23,9 @@ public function register(NewUser newUser) returns UserResponse|UserError|error {
     }
 
     string newId = utils:generateUUID();
-
-    ModifyUser modifyUser = {
-        name: newUser.name,
-        email: newUser.email,
-        phoneNumber: newUser.phoneNumber
-    };
-
     string hashedPassword = check crypto:hashBcrypt(newUser.password);
 
-    error? createError = createUser(newId, modifyUser, hashedPassword);
+    error? createError = createUser(newId, newUser, hashedPassword);
 
     if createError is error {
         return <ExecutionError>{
@@ -53,16 +34,16 @@ public function register(NewUser newUser) returns UserResponse|UserError|error {
     }
 
     return <UserResponse> {
-        ...mapToUserResponseFromModifyUser(modifyUser, newId)
+        ...mapToUserResponseFromNewUser(newUser, newId)
     };
 
 }
 
-public function login(AuthUser authUser) returns UserResponse|ExecutionError|error {
+public function login(AuthUser authUser) returns UserResponse|UserError|error {
     User|error existingUser = getUserByEmail(authUser.email);
     if existingUser is error {
         return <ExecutionError>{
-            body: {msg: string `Login Failed`, details: string `The user with the email: ${authUser.email} doesn't exist ${existingUser.message()}`, timeStamp: time:utcNow()}
+            body: {msg: string `Login Failed`, details: existingUser.message(), timeStamp: time:utcNow()}
         };
     }
 
@@ -86,7 +67,7 @@ public function login(AuthUser authUser) returns UserResponse|ExecutionError|err
 }
 
 
-public function update(string userId, ModifyUser modifyUser) returns User|ExecutionError|error {
+public function update(string userId, ModifyUser modifyUser) returns User|UserError|error {
     if isUserExisting(modifyUser.email, modifyUser.phoneNumber) is true {
         return <ExecutionError>{
             body: {
@@ -144,7 +125,7 @@ public function updatePassword(string userId, UpdatePassword updatePassword) ret
     return updatedUser;
 }
 
-public function delete(string userId) returns common:DeletedResponse|ExecutionError|error {
+public function delete(string userId) returns common:DeletedResponse|UserError|error {
     error? deleteError = deleteUser(userId);
 
     if deleteError is error {
@@ -157,13 +138,16 @@ public function delete(string userId) returns common:DeletedResponse|ExecutionEr
         };
     }
 
-    return <common:DeletedResponse> {
-        body: "User deleted successfully"
+    return <common:DeletedResponse>{
+        body: {
+            msg: "User deleted successfully",
+            timeStamp: time:utcNow()
+        }
     };
 }
 
 
 function mapToUserResponseFromUser(User user, string jwtToken) returns UserResponse => {userId: user.userId, name: user.name, email: user.email, phoneNumber: user.phoneNumber, jwtToken};
-function mapToUserResponseFromModifyUser(ModifyUser user, string newId, string? jwtToken = ()) returns UserResponse => {userId: newId, name: user.name, email: user.email, phoneNumber: user.phoneNumber, jwtToken: jwtToken};
+function mapToUserResponseFromNewUser(NewUser user, string newId, string? jwtToken = ()) returns UserResponse => {userId: newId, name: user.name, email: user.email, phoneNumber: user.phoneNumber, jwtToken: jwtToken};
 
 

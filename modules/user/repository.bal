@@ -45,15 +45,15 @@ function isUserExisting(string email, string phoneNumber) returns boolean|error 
     return user is User;
 } 
 
-function createUser(string newId, ModifyUser modifyUser, string hashedPassword) returns error? {
+function createUser(string newId, NewUser newUser, string hashedPassword) returns error? {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(`
             INSERT INTO user
             VALUES (
                 ${newId},
-                ${modifyUser.name},
-                ${modifyUser.email},
-                ${modifyUser.phoneNumber},
+                ${newUser.name},
+                ${newUser.email},
+                ${newUser.phoneNumber},
                 ${hashedPassword},
                 ${time:utcNow()}
             )

@@ -44,7 +44,7 @@ public type ModifyUser record {|
 |};
 
 public type NewUser record {|
-    *ModifyUser;
+    *ModifyUser; // Type inclusion
     string password;
 |};
 
