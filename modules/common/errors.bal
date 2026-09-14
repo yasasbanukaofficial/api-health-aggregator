@@ -10,5 +10,5 @@ public type ErrorDetails record {|
 
 public type DeletedResponse record {|
     *http:Ok;
-    string body;
+    ErrorDetails body;
 |};
