@@ -8,6 +8,7 @@ public type API record {|
         name: "api_id"
     }
     readonly string apiId;
+
     @sql:Column {
         name: "api_name"
     }
@@ -17,10 +18,16 @@ public type API record {|
         name: "api_url"
     }
     string apiURL;
+
     @sql:Column {
         name: "created_time"
     }
-    time:Date createdTime;
+    time:Civil createdTime;
+
+    @sql:Column {
+        name: "user_id"
+    }
+    readonly string userId;
 |};
 
 // New API and Update API
@@ -30,7 +37,7 @@ public type ModifyAPI record {|
     }
     string name;
     @constraint:String {
-        pattern: re `https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`
+        pattern: re `https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`
     }
     string apiURL;
 |};

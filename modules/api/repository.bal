@@ -37,7 +37,6 @@ function getApiByName(string name) returns API|error {
         return api;
     } on fail error err {
         if err is sql:NoRowsError {
-            io:println("API not found: ", err.message());
             return error(string `API with the name: ${name} not found`);
         }
         io:println("Failed to fetch API: ", err.message());
@@ -45,13 +44,15 @@ function getApiByName(string name) returns API|error {
     }
 }
 
-function createApi(string newId, ModifyAPI modifyAPI) returns API|error {
+function createApi(string newId, string userId, ModifyAPI modifyAPI) returns error? {
     do {
-        API api = check database:apiHealthDB->queryRow(`
+        sql:ExecutionResult result = check database:apiHealthDB->execute(`
             INSERT INTO api
-            VALUES (${newId}, ${modifyAPI.name}, ${modifyAPI.apiURL}, ${time:utcNow()})
-            RETURNING *;`);
-        return api;
+            VALUES (${newId}, ${modifyAPI.name}, ${modifyAPI.apiURL}, ${userId}, ${time:utcNow()});`);
+
+        if result.affectedRowCount == 0 {
+            return error("SQL error when creating the api");
+        }
     } on fail error err {
         io:println("Failed to create API: ", err.message());
         return err;
