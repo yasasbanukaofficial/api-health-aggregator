@@ -1,147 +1,151 @@
+import api_health_aggregator.api;
+import api_health_aggregator.common;
+import api_health_aggregator.user;
+import api_health_aggregator.utils;
+
 import ballerina/http;
 import ballerina/io;
-import ballerinax/mysql;
-import ballerinax/mysql.driver as _;
-import ballerina/sql;
-import ballerina/time;
-import ballerina/uuid;
 
-public type DBConfig record {|
-    string host;
-    string user;
-    string password;
-    string database;
-    int port;
-|};
+configurable int SERVICE_PORT = ?;
 
-const PORT = 9090;
-configurable DBConfig dbConfig = ?;
-final mysql:Client apiHealthDB = check initApiDb();
+listener http:Listener serviceListener = new (SERVICE_PORT);
 
-function initApiDb() returns mysql:Client|error => check new(...dbConfig);
-
-service / on new http:Listener(PORT) {
-    function init() {
-        io:println(`[LOG] Web Service has started om port ${PORT}: http://localhost:${PORT}/`);
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://localhost:3000"]
     }
-
-    resource function get .() returns API[]|error {
-        do {
-            stream<API, sql:Error?> apiStream = 
-                apiHealthDB->query(`SELECT * FROM api`);
-            
-            API[] apis = check from var api in apiStream select api;
-
-            return apis;
-        } on fail error err {
-            io:println("Failed to fetch API's:  ", err.message());
-            return err; 
-        }
-    }
-    
-    resource function get api/[string id]() returns API|NotFoundResponse|error {
-        do {
-            API|error user = check apiHealthDB->queryRow(`SELECT * FROM api WHERE apiId = ${id}`);
-            return user;
-        } on fail var err {
-            if err is sql:NoRowsError {
-                io:println("Failed to fetch API's:  ", err.message());
-                ErrorDetails errorDetails = {
-                    msg: err.message(),
-                    timeStamp: time:utcNow()
-                };
-                
-                NotFoundResponse notFound = {
-                    body: {...errorDetails}
-                };
-
-                return notFound;
-            }
-            return err;
-        }
-    }
-
-    resource function post api(ModifyAPI modifyAPI) returns API|NotFoundResponse|error {
-        string newId = generateUUID();
-
-        API|sql:Error api = apiHealthDB->queryRow(`
-            INSERT INTO api 
-            VALUES (${newId}, ${modifyAPI.name}, ${modifyAPI.apiURL}, ${time:utcNow()});`);
-
-        if api is sql:NoRowsError {
-            io:println("Failed to create API:  ", api.message());
-            ErrorDetails errorDetails = {
-                msg: api.message(),
-                timeStamp: time:utcNow()
-            };
-
-            NotFoundResponse notFound = {
-                body: {...errorDetails}
-            };
-
-            return notFound;
-        }
-
-        return api;
-    }
-
-    resource function put api/[string id](ModifyAPI modifyAPI) returns API|NotFoundResponse|error {
-        do {
-            sql:ExecutionResult result = check apiHealthDB->execute(`
-                UPDATE api 
-                SET name = ${modifyAPI.name}, apiURL = ${modifyAPI.apiURL}
-                WHERE apiId = ${id}`);
-
-            if result.affectedRowCount == 0 {
-                ErrorDetails errorDetails = {
-                    msg: "API not found",
-                    timeStamp: time:utcNow()
-                };
-
-                NotFoundResponse notFound = {
-                    body: {...errorDetails}
-                };
-
-                return notFound;
-            }
-
-            API updatedApi = check apiHealthDB->queryRow(`SELECT * FROM api WHERE apiId = ${id}`);
-            return updatedApi;
-        } on fail error err {
-            io:println("Failed to update API:  ", err.message());
-            return err;
-        }
-    }
-
-    resource function delete api/[string id]() returns DeletedResponse|NotFoundResponse|error {
-        do {
-            sql:ExecutionResult result = check apiHealthDB->execute(`
-                DELETE FROM api WHERE apiId = ${id}`);
-
-            if result.affectedRowCount == 0 {
-                ErrorDetails errorDetails = {
-                    msg: "API not found",
-                    timeStamp: time:utcNow()
-                };
-
-                NotFoundResponse notFound = {
-                    body: {...errorDetails}
-                };
-
-                return notFound;
-            }
-
-            DeletedResponse deleted = {
-                body: "API deleted successfully"
-            };
-
-            return deleted;
-        } on fail error err {
-            io:println("Failed to delete API:  ", err.message());
-            return err;
-        }
-    }
-    
 }
+service / on serviceListener {
+    function init() {
+        io:println(`[LOG] Web Service has started on port ${SERVICE_PORT}: http://localhost:${SERVICE_PORT}/`);
+    }
 
-function generateUUID() returns string => uuid:createRandomUuid();
+    resource function get .() returns string {
+        return "Welcome to API Health Aggregator";
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function get api(http:RequestContext ctx) returns api:API|api:API[]|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:getAll(userId);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function get api/[string id](http:RequestContext ctx) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:get(userId, id);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function post api(http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:create(userId, modifyAPI);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function put api/[string id](http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:update(userId, id, modifyAPI);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function delete api/[string id](http:RequestContext ctx)
+            returns common:DeletedResponse|api:ApiError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return api:delete(userId, id);
+    }
+
+    resource function post user/register(user:NewUser newUser) returns user:UserResponse|user:UserError {
+        return user:register(newUser);
+    }
+
+    resource function post user/login(user:AuthUser authUser) returns user:UserResponse|user:UserError {
+        return user:login(authUser);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function put user/update(
+        http:RequestContext ctx,
+        user:ModifyUser modifyUser
+    ) returns user:User|user:UserError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return user:update(userId, modifyUser);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function put user/password(http:RequestContext ctx, user:UpdatePassword updatePassword) returns user:User|user:UserError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return user:updatePassword(userId, updatePassword);
+    }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function delete user/delete(http:RequestContext ctx)
+            returns common:DeletedResponse|user:UserError {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return user:delete(userId);
+    }
+}
