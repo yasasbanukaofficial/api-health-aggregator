@@ -10,6 +10,11 @@ configurable int SERVICE_PORT = ?;
 
 listener http:Listener serviceListener = new (SERVICE_PORT);
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://localhost:3000"]
+    }
+}
 service / on serviceListener {
     function init() {
         io:println(`[LOG] Web Service has started on port ${SERVICE_PORT}: http://localhost:${SERVICE_PORT}/`);
@@ -18,14 +23,7 @@ service / on serviceListener {
     resource function get .() returns string {
         return "Welcome to API Health Aggregator";
     }
-}
 
-@http:ServiceConfig {
-    cors: {
-        allowOrigins: ["http://localhost:3000/"]
-    }
-}
-service /api on serviceListener {
     @http:ResourceConfig{
         auth: [
             {
@@ -35,7 +33,7 @@ service /api on serviceListener {
             }
         ]
     }
-    resource function get .(http:RequestContext ctx) returns api:API|api:API[]|api:ApiError {
+    resource function get api(http:RequestContext ctx) returns api:API|api:API[]|api:ApiError {
         string userId = check utils:getUserIdFromContext(ctx);
         return api:getAll(userId);
     }
@@ -96,19 +94,12 @@ service /api on serviceListener {
         string userId = check utils:getUserIdFromContext(ctx);
         return api:delete(userId, id);
     }
-}
 
-@http:ServiceConfig {
-    cors: {
-        allowOrigins: ["http://localhost:3000"]
-    }
-}
-service /user on serviceListener {
-    resource function post register(user:NewUser newUser) returns user:UserResponse|user:UserError {
+    resource function post user/register(user:NewUser newUser) returns user:UserResponse|user:UserError {
         return user:register(newUser);
     }
 
-    resource function post login(user:AuthUser authUser) returns user:UserResponse|user:UserError {
+    resource function post user/login(user:AuthUser authUser) returns user:UserResponse|user:UserError {
         return user:login(authUser);
     }
 
@@ -121,7 +112,7 @@ service /user on serviceListener {
             }
         ]
     }
-    resource function put update(
+    resource function put user/update(
         http:RequestContext ctx,
         user:ModifyUser modifyUser
     ) returns user:User|user:UserError {
@@ -138,7 +129,7 @@ service /user on serviceListener {
             }
         ]
     }
-    resource function put password(http:RequestContext ctx, user:UpdatePassword updatePassword) returns user:User|user:UserError {
+    resource function put user/password(http:RequestContext ctx, user:UpdatePassword updatePassword) returns user:User|user:UserError {
         string userId = check utils:getUserIdFromContext(ctx);
         return user:updatePassword(userId, updatePassword);
     }
@@ -152,7 +143,7 @@ service /user on serviceListener {
             }
         ]
     }
-    resource function delete delete(http:RequestContext ctx)
+    resource function delete user/delete(http:RequestContext ctx)
             returns common:DeletedResponse|user:UserError {
         string userId = check utils:getUserIdFromContext(ctx);
         return user:delete(userId);

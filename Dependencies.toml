@@ -405,6 +405,7 @@ modules = [
 	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.api"},
 	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.common"},
 	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.database"},
+	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.health"},
 	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.user"},
 	{org = "bezerk", packageName = "api_health_aggregator", moduleName = "api_health_aggregator.utils"}
 ]
