@@ -5,6 +5,7 @@ import api_health_aggregator.utils;
 
 import ballerina/http;
 import ballerina/io;
+import api_health_aggregator.health;
 
 configurable int SERVICE_PORT = ?;
 
@@ -33,7 +34,7 @@ service / on serviceListener {
             }
         ]
     }
-    resource function get api(http:RequestContext ctx) returns api:API|api:API[]|api:ApiError {
+    resource function get api(http:RequestContext ctx) returns api:API|api:API[]|api:ApiError|error {
         string userId = check utils:getUserIdFromContext(ctx);
         return api:getAll(userId);
     }
@@ -47,7 +48,7 @@ service / on serviceListener {
             }
         ]
     }
-    resource function get api/[string id](http:RequestContext ctx) returns api:API|api:ApiError {
+    resource function get api/[string id](http:RequestContext ctx) returns api:API|api:ApiError|error {
         string userId = check utils:getUserIdFromContext(ctx);
         return api:get(userId, id);
     }
@@ -61,7 +62,7 @@ service / on serviceListener {
             }
         ]
     }
-    resource function post api(http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
+    resource function post api(http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError|error {
         string userId = check utils:getUserIdFromContext(ctx);
         return api:create(userId, modifyAPI);
     }
@@ -75,7 +76,7 @@ service / on serviceListener {
             }
         ]
     }
-    resource function put api/[string id](http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError {
+    resource function put api/[string id](http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError|error {
         string userId = check utils:getUserIdFromContext(ctx);
         return api:update(userId, id, modifyAPI);
     }
@@ -90,16 +91,16 @@ service / on serviceListener {
         ]
     }
     resource function delete api/[string id](http:RequestContext ctx)
-            returns common:DeletedResponse|api:ApiError {
+            returns common:DeletedResponse|api:ApiError|error {
         string userId = check utils:getUserIdFromContext(ctx);
         return api:delete(userId, id);
     }
 
-    resource function post user/register(user:NewUser newUser) returns user:UserResponse|user:UserError {
+    resource function post user/register(user:NewUser newUser) returns user:UserResponse|user:UserError|error {
         return user:register(newUser);
     }
 
-    resource function post user/login(user:AuthUser authUser) returns user:UserResponse|user:UserError {
+    resource function post user/login(user:AuthUser authUser) returns user:UserResponse|user:UserError|error {
         return user:login(authUser);
     }
 
@@ -115,7 +116,7 @@ service / on serviceListener {
     resource function put user/update(
         http:RequestContext ctx,
         user:ModifyUser modifyUser
-    ) returns user:User|user:UserError {
+) returns user:User|user:UserError|error {
         string userId = check utils:getUserIdFromContext(ctx);
         return user:update(userId, modifyUser);
     }
@@ -129,7 +130,7 @@ service / on serviceListener {
             }
         ]
     }
-    resource function put user/password(http:RequestContext ctx, user:UpdatePassword updatePassword) returns user:User|user:UserError {
+    resource function put user/password(http:RequestContext ctx, user:UpdatePassword updatePassword) returns user:User|user:UserError|error {
         string userId = check utils:getUserIdFromContext(ctx);
         return user:updatePassword(userId, updatePassword);
     }
@@ -144,8 +145,23 @@ service / on serviceListener {
         ]
     }
     resource function delete user/delete(http:RequestContext ctx)
-            returns common:DeletedResponse|user:UserError {
+            returns common:DeletedResponse|user:UserError|error {
         string userId = check utils:getUserIdFromContext(ctx);
         return user:delete(userId);
+    }
+
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource function get health(http:RequestContext ctx) returns health:APIHealth[]|api:ApiError|error {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return health:getAll(userId);
     }
 }

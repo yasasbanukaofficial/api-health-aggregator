@@ -41,14 +41,3 @@ public type ModifyAPI record {|
     }
     string apiURL;
 |};
-
-// API Health related records
-public type APIHealth record {|
-    readonly string apiHealthId;
-    string status;
-    int responseTime;
-    time:Date checkedAt;
-    API apiService;
-
-    string apiId;
-|};

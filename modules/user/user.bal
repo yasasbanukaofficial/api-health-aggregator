@@ -1,3 +1,4 @@
+import ballerina/http;
 import ballerina/time;
 import api_health_aggregator.common;
 import api_health_aggregator.utils;
@@ -6,9 +7,7 @@ public function get(string id) returns UserResponse|UserError|error {
     User|error user = getUser(id);
 
     if user is error {
-        return <ExecutionError> {
-            body: {msg: string `Error when fetching user`, details: user.message(), timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_NOT_FOUND, "Error when fetching user", user.message());
     }
 
     return mapToUserResponseFromUser(user, "");
@@ -17,9 +16,7 @@ public function get(string id) returns UserResponse|UserError|error {
 public function register(NewUser newUser) returns UserResponse|UserError|error {
 
     if isUserExisting(newUser.email, newUser.phoneNumber) is true {
-        return <UserAlreadyExists>{
-            body: {msg: "Error when creating user", details: string `User already exists with the email ${newUser.email}`, timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_CONFLICT, "Error when creating user", string `User already exists with the email ${newUser.email}`);
     }
 
     string newId = utils:generateUUID();
@@ -28,9 +25,7 @@ public function register(NewUser newUser) returns UserResponse|UserError|error {
     error? createError = createUser(newId, newUser, hashedPassword);
 
     if createError is error {
-        return <ExecutionError>{
-            body: {msg: "Error when creating user", details: "Error when creating user" + createError.message(), timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when creating user", "Error when creating user" + createError.message());
     }
 
     return <UserResponse> {
@@ -42,23 +37,17 @@ public function register(NewUser newUser) returns UserResponse|UserError|error {
 public function login(AuthUser authUser) returns UserResponse|UserError|error {
     User|error existingUser = getUserByEmail(authUser.email);
     if existingUser is error {
-        return <ExecutionError>{
-            body: {msg: string `Login Failed`, details: existingUser.message(), timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_NOT_FOUND, "Login Failed", existingUser.message());
     }
 
     if check crypto:verifyBcrypt(authUser.password, existingUser.password) is false {
-        return <ExecutionError>{
-            body: {msg: "Login failed", details: "Credentials don't match", timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_UNAUTHORIZED, "Login failed", "Credentials don't match");
     }
 
     string|error jwtToken = utils:generateJwt(existingUser.userId);
 
     if jwtToken is error {
-        return <ExecutionError> {
-            body: {msg: "Error when issuing token", details: jwtToken.message(), timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when issuing token", jwtToken.message());
     }
 
     return <UserResponse>{
@@ -69,39 +58,27 @@ public function login(AuthUser authUser) returns UserResponse|UserError|error {
 
 public function update(string userId, ModifyUser modifyUser) returns User|UserError|error {
     if isUserExisting(modifyUser.email, modifyUser.phoneNumber) is true {
-        return <ExecutionError>{
-            body: {
-                msg: "Error when updating user",
-                details: "Update cannot happen because this email or phone number already exists.",
-                timeStamp: time:utcNow()
-            }
-        };
+        return userError(http:STATUS_CONFLICT, "Error when updating user", "Update cannot happen because this email or phone number already exists.");
     }
     
     User|error updatedUser = updateUser(userId, modifyUser);
 
     if updatedUser is error {
-        return <ExecutionError> {
-            body: {msg: "Error when updating user", details: updatedUser.message(), timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when updating user", updatedUser.message());
     }
 
     return updatedUser;
 }
 
-public function updatePassword(string userId, UpdatePassword updatePassword) returns User|ExecutionError|error {
+public function updatePassword(string userId, UpdatePassword updatePassword) returns User|UserError|error {
     User|error existingUser = getUser(userId);
 
     if existingUser is error {
-        return <ExecutionError>{
-            body: {msg: "Error when updating user password", details: existingUser.message(), timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_NOT_FOUND, "Error when updating user password", existingUser.message());
     }
 
     if check crypto:verifyBcrypt(updatePassword.password, existingUser.password) is true {
-        return <ExecutionError>{
-            body: {msg: "Error when updating user password", details: "New password cannot be the same as the current password", timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_BAD_REQUEST, "Error when updating user password", "New password cannot be the same as the current password");
     }
 
     string hashedPassword = check crypto:hashBcrypt(updatePassword.password);
@@ -109,17 +86,13 @@ public function updatePassword(string userId, UpdatePassword updatePassword) ret
     error? updateError = updateUserPassword(userId, hashedPassword);
 
     if updateError is error {
-        return <ExecutionError>{
-            body: {msg: "Error when updating user password", details: updateError.message(), timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when updating user password", updateError.message());
     }
 
     User|error updatedUser = getUser(userId);
 
     if updatedUser is error {
-        return <ExecutionError>{
-            body: {msg: "Error when updating user password", details: updatedUser.message(), timeStamp: time:utcNow()}
-        };
+        return userError(http:STATUS_NOT_FOUND, "Error when updating user password", updatedUser.message());
     }
 
     return updatedUser;
@@ -129,13 +102,7 @@ public function delete(string userId) returns common:DeletedResponse|UserError|e
     error? deleteError = deleteUser(userId);
 
     if deleteError is error {
-        return <ExecutionError>{
-            body: {
-                msg: "Error when deleting user",
-                details: deleteError.message(),
-                timeStamp: time:utcNow()
-            }
-        };
+        return userError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when deleting user", deleteError.message());
     }
 
     return <common:DeletedResponse>{
