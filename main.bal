@@ -162,6 +162,6 @@ service / on serviceListener {
     }
     resource function get health(http:RequestContext ctx) returns health:APIHealth[]|api:ApiError|error {
         string userId = check utils:getUserIdFromContext(ctx);
-        return health:getAll(userId);
+        return health:getAllHealth(userId);
     }
 }

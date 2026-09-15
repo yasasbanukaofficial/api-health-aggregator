@@ -405,6 +405,52 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Health Monitoring",
+      "item": [
+        {
+          "name": "Get All API Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array of health records', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Each health record has required fields', function () {",
+                  "    var json = pm.response.json();",
+                  "    json.forEach(function(record) {",
+                  "        pm.expect(record).to.have.property('apiHealthId');",
+                  "        pm.expect(record).to.have.property('status');",
+                  "        pm.expect(record).to.have.property('statusCode');",
+                  "        pm.expect(record).to.have.property('responseTime');",
+                  "        pm.expect(record).to.have.property('checkedAt');",
+                  "        pm.expect(record).to.have.property('apiId');",
+                  "        pm.expect(record.status).to.be.oneOf(['UP', 'DOWN', 'ERROR']);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
