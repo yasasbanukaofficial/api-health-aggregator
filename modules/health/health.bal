@@ -1,9 +1,8 @@
 import api_health_aggregator.api;
 import ballerina/http;
-import ballerina/io;
 import ballerina/time;
 
-public function getAllHealth(string userId) returns APIHealth[]|api:ApiError{
+public isolated function getAllHealth(string userId) returns APIHealth[]|api:ApiError{
     api:API[]|api:ApiError|error apiList = api:getAll(userId);
     future<APIHealth|error>[] futureApiHealthList = [];
     APIHealth[] results = [];
@@ -12,7 +11,7 @@ public function getAllHealth(string userId) returns APIHealth[]|api:ApiError{
         return api:apiError(500, "Unable to retrieve APIs", apiList is error ? apiList.message(): apiList.body.details);
     }
     foreach api:API api in apiList {
-            future<APIHealth|error> futureApiHealth = start checkHealth(api);
+            future<APIHealth|error> futureApiHealth = start checkHealth(api.cloneReadOnly());
             futureApiHealthList.push(futureApiHealth);
         }
         foreach future<APIHealth|error> futureApi in futureApiHealthList {
@@ -25,7 +24,7 @@ public function getAllHealth(string userId) returns APIHealth[]|api:ApiError{
 }
 
 
-function checkHealth(api:API api) returns APIHealth|error {
+isolated function checkHealth(api:API api) returns APIHealth|error {
     final http:Client apiClient = check new(api.apiURL, {
         timeout: 3
     });
@@ -38,7 +37,6 @@ function checkHealth(api:API api) returns APIHealth|error {
     time:Utc endingTime =  time:utcNow();
 
     time:Seconds responseTime = time:utcDiffSeconds(endingTime, startingTime);
-    io:println(responseTime);
     
     if resp is error {
         status = "DOWN";
