@@ -31,12 +31,14 @@ Run requests in order:
 5. **API Management > Get All APIs** - List all APIs
 6. **API Management > Get API by ID** - Fetch specific API
 7. **API Management > Update API** - Modify API details
-8. **API Management > Delete API** - Remove API
-9. **User Management > Delete User** - Clean up test user
+8. **Health > Get All API Health** - Check health of all APIs
+9. **Health > Get API Health by ID** - Check health of a single API
+10. **API Management > Delete API** - Remove API
+11. **User Management > Delete User** - Clean up test user
 
 ## Auth
 
-All `/api/*` endpoints require JWT Bearer token. The collection is configured with bearer auth using `{{jwtToken}}` variable. Login automatically populates this variable.
+All `/api/*` and `/health/*` endpoints require JWT Bearer token. The collection is configured with bearer auth using `{{jwtToken}}` variable. Login automatically populates this variable.
 
 ## Auto-populated Variables
 

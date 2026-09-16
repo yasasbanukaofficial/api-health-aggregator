@@ -3,7 +3,7 @@ CREATE TABLE api_health_aggregator.api (
     api_id CHAR(36) PRIMARY KEY,
     -- VARCHAR means variable-length characters
     api_name VARCHAR(100) NOT NULL,
-    api_url VARCHAR(100) NOT NULL,
+    api_url VARCHAR(200) NOT NULL,
     user_id CHAR(36) NOT NULL REFERENCES user(user_id) ON DELETE CASCADE,
     created_time DATETIME
 );
@@ -38,8 +38,8 @@ VALUES
 CREATE TABLE api_health_aggregator.api_health (
     api_health_id CHAR(36) PRIMARY KEY,
     status VARCHAR(20) NOT NULL,
-    status_code INT NOT NULL,
-    response_time DOUBLE NOT NULL,
+    status_code INT,
+    response_time DOUBLE,
     checked_at DATETIME NOT NULL,
     api_id CHAR(36) NOT NULL REFERENCES api(api_id) ON DELETE CASCADE
 );

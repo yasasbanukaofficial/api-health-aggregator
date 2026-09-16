@@ -2,6 +2,7 @@ import ballerina/http;
 import ballerina/time;
 import api_health_aggregator.common;
 import api_health_aggregator.utils;
+import api_health_aggregator.health;
 
 public isolated function getAll(string userId) returns API[]|ApiError {
     API[]|error apis = getAllApi(userId);
@@ -31,8 +32,27 @@ public isolated function getApiUrl(string userId, string apiId) returns string|A
     return apiUrl;
 }
 
+
+
+public isolated function getAllHealth(string userId) returns health:APIHealthResponse[]|ApiError|health:ApiHealthError {
+    API[]|ApiError apis = getAll(userId);
+    if apis is ApiError {
+        return apis;
+    }
+    health:HealthTarget[] targets = from var a in apis select {apiId: a.apiId, apiName: a.name, apiURL: a.apiURL};
+    return health:getAllHealth(targets);
+}
+
+public isolated function getHealth(string userId, string apiId) returns health:APIHealthResponse|ApiError|health:ApiHealthError {
+    API|error existingAPI = getApi(userId, apiId);
+    if existingAPI is error {
+        return apiError(http:STATUS_NOT_FOUND, "Error when fetching API", existingAPI.message());
+    }
+    return health:getHealth(apiId, existingAPI.name, existingAPI.apiURL);
+}
+
 public isolated function create(string userId, ModifyAPI modifyAPI) returns API|ApiError {
-    API|error existingAPI = getApiByName(userId, modifyAPI.apiURL);
+    API|error existingAPI = getApiByUrl(userId, modifyAPI.apiURL);
     
     if existingAPI is API {
         return apiError(http:STATUS_CONFLICT, "Error when creating API", string `API already exists with the name ${modifyAPI.name}`);
@@ -40,10 +60,10 @@ public isolated function create(string userId, ModifyAPI modifyAPI) returns API|
 
     string newId = utils:generateUUID();
 
-    error? apiCreateError = createApi(newId, userId, modifyAPI);
+    error? transactionAPI = createApiAndHealth(newId, userId, modifyAPI);
 
-    if apiCreateError is error {
-        return apiError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when creating API", apiCreateError.message());
+    if transactionAPI is error {
+        return apiError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when creating API", transactionAPI.message());
     }
 
     return {
@@ -53,6 +73,14 @@ public isolated function create(string userId, ModifyAPI modifyAPI) returns API|
         apiURL: modifyAPI.apiURL,
         userId
     };
+}
+
+isolated function createApiAndHealth(string newId, string userId, ModifyAPI modifyAPI) returns error? {
+    transaction {
+        check createApi(newId, userId, modifyAPI);
+        check health:seedHealthData(newId);
+        check commit;
+    }
 }
 
 public isolated function update(string userId, string id, ModifyAPI modifyAPI) returns API|ApiError {

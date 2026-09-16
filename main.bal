@@ -1,10 +1,8 @@
 import api_health_aggregator.api;
 import api_health_aggregator.common;
 import api_health_aggregator.user;
-import api_health_aggregator.utils;
 
 import ballerina/http;
-import ballerina/io;
 import api_health_aggregator.health;
 
 configurable int SERVICE_PORT = ?;
@@ -18,7 +16,7 @@ listener http:Listener serviceListener = new (SERVICE_PORT);
 }
 service / on serviceListener {
     function init() {
-        io:println(`[LOG] Web Service has started on port ${SERVICE_PORT}: http://localhost:${SERVICE_PORT}/`);
+        common:logInfo(string `Web Service has started on port ${SERVICE_PORT}: http://localhost:${SERVICE_PORT}/`);
     }
 
     resource isolated function get .() returns string {
@@ -35,7 +33,7 @@ service / on serviceListener {
         ]
     }
     resource isolated function get api(http:RequestContext ctx) returns api:API|api:API[]|api:ApiError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
+        string userId = check common:getUserIdFromContext(ctx);
         return api:getAll(userId);
     }
 
@@ -49,7 +47,7 @@ service / on serviceListener {
         ]
     }
     resource isolated function get api/[string id](http:RequestContext ctx) returns api:API|api:ApiError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
+        string userId = check common:getUserIdFromContext(ctx);
         return api:get(userId, id);
     }
 
@@ -63,7 +61,7 @@ service / on serviceListener {
         ]
     }
     resource isolated function post api(http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
+        string userId = check common:getUserIdFromContext(ctx);
         return api:create(userId, modifyAPI);
     }
 
@@ -77,7 +75,7 @@ service / on serviceListener {
         ]
     }
     resource isolated function put api/[string id](http:RequestContext ctx, api:ModifyAPI modifyAPI) returns api:API|api:ApiError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
+        string userId = check common:getUserIdFromContext(ctx);
         return api:update(userId, id, modifyAPI);
     }
 
@@ -92,7 +90,7 @@ service / on serviceListener {
     }
     resource isolated function delete api/[string id](http:RequestContext ctx)
             returns common:DeletedResponse|api:ApiError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
+        string userId = check common:getUserIdFromContext(ctx);
         return api:delete(userId, id);
     }
 
@@ -117,7 +115,7 @@ service / on serviceListener {
         http:RequestContext ctx,
         user:ModifyUser modifyUser
 ) returns user:User|user:UserError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
+        string userId = check common:getUserIdFromContext(ctx);
         return user:update(userId, modifyUser);
     }
 
@@ -131,7 +129,7 @@ service / on serviceListener {
         ]
     }
     resource isolated function put user/password(http:RequestContext ctx, user:UpdatePassword updatePassword) returns user:User|user:UserError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
+        string userId = check common:getUserIdFromContext(ctx);
         return user:updatePassword(userId, updatePassword);
     }
 
@@ -146,7 +144,7 @@ service / on serviceListener {
     }
     resource isolated function delete user/delete(http:RequestContext ctx)
             returns common:DeletedResponse|user:UserError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
+        string userId = check common:getUserIdFromContext(ctx);
         return user:delete(userId);
     }
 
@@ -160,9 +158,9 @@ service / on serviceListener {
             }
         ]
     }
-    resource isolated function get health(http:RequestContext ctx) returns health:APIHealth[]|api:ApiError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
-        return health:getAllHealth(userId);
+    resource isolated function get health(http:RequestContext ctx) returns health:APIHealthResponse[]|api:ApiError|health:ApiHealthError|error {
+        string userId = check common:getUserIdFromContext(ctx);
+        return api:getAllHealth(userId);
     }
 
     @http:ResourceConfig{
@@ -174,8 +172,8 @@ service / on serviceListener {
             }
         ]
     }
-    resource isolated function get health/[string apiId](http:RequestContext ctx) returns health:APIHealth|api:ApiError|error {
-        string userId = check utils:getUserIdFromContext(ctx);
-        return health:getHealth(userId, apiId);
+    resource isolated function get health/[string apiId](http:RequestContext ctx) returns health:APIHealthResponse|api:ApiError|health:ApiHealthError|error {
+        string userId = check common:getUserIdFromContext(ctx);
+        return api:getHealth(userId, apiId);
     }
 }

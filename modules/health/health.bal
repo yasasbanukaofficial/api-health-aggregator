@@ -1,52 +1,38 @@
-import api_health_aggregator.api;
-
 import ballerina/http;
 import ballerina/time;
 
-public isolated function getAllHealth(string userId) returns APIHealth[]|api:ApiError{
-    api:API[]|api:ApiError|error apiList = api:getAll(userId);
-    future<APIHealth|error>[] futureApiHealthList = [];
-    APIHealth[] results = [];
+import api_health_aggregator.utils;
 
-    if apiList is error|api:ApiError {
-        return api:apiError(500, "Unable to retrieve APIs", apiList is error ? apiList.message(): apiList.body.details);
-    }
 
-    foreach api:API api in apiList {
-        api:API & readonly apiCloneReadOnly = api.cloneReadOnly(); 
-        future<APIHealth|error> futureApiHealth = start checkHealth(apiCloneReadOnly.apiId, apiCloneReadOnly.apiURL);
-        futureApiHealthList.push(futureApiHealth);
+public isolated function getAllHealth(HealthTarget[] targets) returns APIHealthResponse[]|ApiHealthError {
+    future<APIHealthResponse|error>[] futures = [];
+    foreach HealthTarget t in targets {
+        future<APIHealthResponse|error> f = start checkHealth(t.apiId, t.apiName, t.apiURL);
+        futures.push(f);
     }
-    
-    foreach future<APIHealth|error> futureApi in futureApiHealthList {
-        APIHealth|error apiHealth = wait futureApi;
-        if apiHealth is APIHealth {
-            results.push(apiHealth);
+    APIHealthResponse[] results = [];
+    foreach var f in futures {
+        APIHealthResponse|error r = wait f;
+        if r is APIHealthResponse {
+            results.push(r);
         }
     }
-
     return results;
 }
 
-public isolated function getHealth(string userId, string apiId) returns APIHealth|api:ApiError {
-    string|api:ApiError apiUrl = api:getApiUrl(userId, apiId);
-
-    if apiUrl is api:ApiError {
-        return api:apiError(404, "Unable to find API", apiUrl.body.details);
+public isolated function getHealth(string apiId, string apiName, string apiUrl) returns APIHealthResponse|ApiHealthError {
+    APIHealthResponse|error result = checkHealth(apiId, apiName, apiUrl);
+    if result is error {
+        return healthError(500, "Unable to check API health", result.message());
     }
-
-    future<APIHealth|error> futureApiHealth = start checkHealth(apiId, apiUrl);
-    APIHealth|error apiHealth = wait futureApiHealth;
-    
-    if apiHealth is error {
-        return api:apiError(500, "Unable to check API health", apiHealth.message());
-    }
-
-    return apiHealth;
+    return result;
 }
 
+public transactional isolated function seedHealthData(string apiId) returns error? {
+    check addSeedHealthData(utils:generateUUID(), apiId);
+}
 
-isolated function checkHealth(string apiId, string apiUrl) returns APIHealth|error {
+isolated function checkHealth(string apiId, string apiName, string apiUrl) returns APIHealthResponse|error {
     final http:Client apiClient = check new(apiUrl, {
         timeout: 3
     });
@@ -68,8 +54,8 @@ isolated function checkHealth(string apiId, string apiUrl) returns APIHealth|err
         statusCode = resp.statusCode;
     }
 
-    return <APIHealth> {
-        apiHealthId: "",
+    return <APIHealthResponse> {
+        apiName,
         status,
         statusCode,
         responseTime,
