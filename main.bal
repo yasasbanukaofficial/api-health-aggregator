@@ -164,4 +164,18 @@ service / on serviceListener {
         string userId = check utils:getUserIdFromContext(ctx);
         return health:getAllHealth(userId);
     }
+
+    @http:ResourceConfig{
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    ...common:validatorConfig
+                }
+            }
+        ]
+    }
+    resource isolated function get health/[string apiId](http:RequestContext ctx) returns health:APIHealth|api:ApiError|error {
+        string userId = check utils:getUserIdFromContext(ctx);
+        return health:getHealth(userId, apiId);
+    }
 }

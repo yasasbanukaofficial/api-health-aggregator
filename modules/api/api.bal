@@ -3,7 +3,7 @@ import ballerina/time;
 import api_health_aggregator.common;
 import api_health_aggregator.utils;
 
-public isolated function getAll(string userId) returns API[]|ApiError|error {
+public isolated function getAll(string userId) returns API[]|ApiError {
     API[]|error apis = getAllApi(userId);
 
     if apis is error {
@@ -12,7 +12,7 @@ public isolated function getAll(string userId) returns API[]|ApiError|error {
     return apis;
 }
 
-public isolated function get(string userId, string apiId) returns API|ApiError|error {
+public isolated function get(string userId, string apiId) returns API|ApiError {
     API|error api = getApi(userId, apiId);
 
     if api is error {
@@ -21,9 +21,20 @@ public isolated function get(string userId, string apiId) returns API|ApiError|e
     return api;
 }
 
-public isolated function create(string userId, ModifyAPI modifyAPI) returns API|ApiError|error {
+public isolated function getApiUrl(string userId, string apiId) returns string|ApiError {
+    string|error apiUrl = getUrlByApiId(userId, apiId);
 
-    if getApiByName(modifyAPI.name) is API {
+    if apiUrl is error {
+        return apiError(http:STATUS_NOT_FOUND, "Error when fetching API URL", apiUrl.message());
+    }
+
+    return apiUrl;
+}
+
+public isolated function create(string userId, ModifyAPI modifyAPI) returns API|ApiError {
+    API|error existingAPI = getApiByName(userId, modifyAPI.apiURL);
+    
+    if existingAPI is API {
         return apiError(http:STATUS_CONFLICT, "Error when creating API", string `API already exists with the name ${modifyAPI.name}`);
     }
 
@@ -44,7 +55,7 @@ public isolated function create(string userId, ModifyAPI modifyAPI) returns API|
     };
 }
 
-public isolated function update(string userId, string id, ModifyAPI modifyAPI) returns API|ApiError|error {
+public isolated function update(string userId, string id, ModifyAPI modifyAPI) returns API|ApiError {
     API|error updatedApi = updateApi(userId, id, modifyAPI);
 
     if updatedApi is error {
@@ -57,7 +68,7 @@ public isolated function update(string userId, string id, ModifyAPI modifyAPI) r
     return updatedApi;
 }
 
-public isolated function delete(string userId, string id) returns common:DeletedResponse|ApiError|error {
+public isolated function delete(string userId, string id) returns common:DeletedResponse|ApiError {
     error? result = deleteApi(userId, id);
 
     if result is error {

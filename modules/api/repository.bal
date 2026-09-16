@@ -30,19 +30,35 @@ isolated function getApi(string userId, string apiId) returns API|error {
     }
 }
 
-isolated function getApiByName(string name) returns API|error {
+isolated function getApiByName(string userId, string apiUrl) returns API|error {
     do {
         API api = check database:apiHealthDB->queryRow(
-            `SELECT * FROM api WHERE api_name = ${name}`);
+            `SELECT * FROM api WHERE api_url = ${apiUrl} AND user_id=${userId}`);
         return api;
     } on fail error err {
         if err is sql:NoRowsError {
-            return error(string `API with the name: ${name} not found`);
+            return error(string `API with the apiUrl: ${apiUrl} not found`);
         }
         io:println("Failed to fetch API: ", err.message());
         return err;
     }
 }
+
+isolated function getUrlByApiId(string userId, string apiId) returns string|error {
+    do {
+        string|error apiUrl = check database:apiHealthDB->queryRow(
+            `SELECT api_url FROM api WHERE api_id=${apiId} AND user_id=${userId}`
+        );
+        return apiUrl;
+    } on fail error err {
+        if err is sql:NoRowsError {
+            return error(string `API with the api Id: ${apiId} not found`);
+        }
+        io:println("Failed to fetch API: ", err.message());
+        return err;
+    }
+} 
+
 
 isolated function createApi(string newId, string userId, ModifyAPI modifyAPI) returns error? {
     do {
