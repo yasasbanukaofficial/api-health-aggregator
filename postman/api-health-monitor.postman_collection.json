@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "API Health Monitor",
-    "description": "Collection for testing API Health Monitor endpoints (Ballerina service on localhost:9090)",
+    "name": "API Health Aggregator",
+    "description": "Collection for testing API Health aggregator endpoints (Ballerina service on localhost:9090)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -407,7 +407,7 @@
       ]
     },
     {
-      "name": "Health Monitoring",
+      "name": "Health aggregator",
       "item": [
         {
           "name": "Get All API Health",
