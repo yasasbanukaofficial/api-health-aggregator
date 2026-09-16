@@ -44,7 +44,7 @@ public isolated function login(AuthUser authUser) returns UserResponse|UserError
         return userError(http:STATUS_UNAUTHORIZED, "Login failed", "Credentials don't match");
     }
 
-    string|error jwtToken = utils:generateJwt(existingUser.userId);
+    string|error jwtToken = common:generateJwt(existingUser.userId);
 
     if jwtToken is error {
         return userError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when issuing token", jwtToken.message());

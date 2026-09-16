@@ -1,17 +1,13 @@
-import ballerina/uuid;
 import ballerina/http;
 import ballerina/jwt;
-import api_health_aggregator.common;
-
-public isolated function generateUUID() returns string => uuid:createRandomUuid();
 
 public isolated function validateJwt(string jwtToken) returns jwt:Payload|error {
-    return check jwt:validate(jwtToken, validatorConfig = {...common:validatorConfig});
+    return check jwt:validate(jwtToken, validatorConfig = {...validatorConfig});
 }
 
 public isolated function generateJwt(string userId) returns string|error {
     do {
-        jwt:IssuerConfig config = {...common:issueConfig, username: userId};
+        jwt:IssuerConfig config = {...issueConfig, username: userId};
         string token = check jwt:issue(config);
         return token;
     } on fail error e {

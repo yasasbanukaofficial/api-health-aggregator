@@ -1,7 +1,7 @@
-import ballerina/io;
 import ballerina/sql;
 import ballerina/time;
 
+import api_health_aggregator.common;
 import api_health_aggregator.database;
 
 isolated function getAllUsers() returns User[]|error {
@@ -12,7 +12,7 @@ isolated function getAllUsers() returns User[]|error {
         User[] users = check from var user in userStream select user;
         return users;
     } on fail error err {
-        io:println("Failed to fetch users:  ", err.message());
+        common:logError("Failed to fetch users: " + err.message());
         return err; 
     }
 }
@@ -23,7 +23,7 @@ isolated function getUser(string id) returns User|error {
         return user;
     } on fail var err {
         if err is sql:NoRowsError {
-            io:println("Failed to fetch user:  ", err.message());
+            common:logError("Failed to fetch user: " + err.message());
             return error(string `User with the id: ${id} not found`);
         }
         return err;
@@ -35,7 +35,7 @@ isolated function getUserByEmail(string email) returns User|error {
         User|error user = check database:apiHealthDB->queryRow(`SELECT * FROM user WHERE email = ${email}`);
         return user;
     } on fail var err {
-        io:println("Failed to fetch user:  ", err.message());
+        common:logError("Failed to fetch user: " + err.message());
         return error(string `User with the email: ${email} not found`);
     }
 }
@@ -63,7 +63,7 @@ isolated function createUser(string newId, NewUser newUser, string hashedPasswor
             return error("SQL error when creating the user");
         }
     } on fail error err {
-        io:println("Failed to create user: ", err.message());
+        common:logError("Failed to create user: " + err.message());
         return err;
     }
 }
@@ -83,7 +83,7 @@ isolated function updateUser(string id, ModifyUser modifyUser) returns User|erro
         return updatedUser;
 
     } on fail error err {
-        io:println("Failed to update user:  ", err.message());
+        common:logError("Failed to update user: " + err.message());
         return err;
     }
 }
@@ -99,7 +99,7 @@ isolated function updateUserPassword(string id, string hashedPassword) returns e
             return error(string `SQL error when modifying user with the id: ${id} not found`);
         }
     } on fail error err {
-        io:println("Failed to update user password:  ", err.message());
+        common:logError("Failed to update user password: " + err.message());
         return err;
     }
 }
@@ -114,7 +114,7 @@ isolated function deleteUser(string id) returns error? {
         }
 
     } on fail error err {
-        io:println("Failed to delete user:  ", err.message());
+        common:logError("Failed to delete user: " + err.message());
         return err;
     }
 }
