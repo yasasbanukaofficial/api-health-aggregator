@@ -3,13 +3,13 @@ import ballerina/http;
 import ballerina/jwt;
 import api_health_aggregator.common;
 
-public function generateUUID() returns string => uuid:createRandomUuid();
+public isolated function generateUUID() returns string => uuid:createRandomUuid();
 
-public function validateJwt(string jwtToken) returns jwt:Payload|error {
+public isolated function validateJwt(string jwtToken) returns jwt:Payload|error {
     return check jwt:validate(jwtToken, validatorConfig = {...common:validatorConfig});
 }
 
-public function generateJwt(string userId) returns string|error {
+public isolated function generateJwt(string userId) returns string|error {
     do {
         jwt:IssuerConfig config = {...common:issueConfig, username: userId};
         string token = check jwt:issue(config);
@@ -19,7 +19,7 @@ public function generateJwt(string userId) returns string|error {
     }
 }
 
-public function getUserIdFromContext(http:RequestContext ctx) returns string|error {
+public isolated function getUserIdFromContext(http:RequestContext ctx) returns string|error {
     [jwt:Header, jwt:Payload] jwtInformation =
         check ctx.getWithType(http:JWT_INFORMATION);
 

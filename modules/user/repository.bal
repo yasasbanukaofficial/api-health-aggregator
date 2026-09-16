@@ -4,7 +4,7 @@ import ballerina/time;
 
 import api_health_aggregator.database;
 
-function getAllUsers() returns User[]|error {
+isolated function getAllUsers() returns User[]|error {
     do {
         stream<User, sql:Error?> userStream = 
             database:apiHealthDB->query(`SELECT * FROM user`);
@@ -17,7 +17,7 @@ function getAllUsers() returns User[]|error {
     }
 }
 
-function getUser(string id) returns User|error {
+isolated function getUser(string id) returns User|error {
     do {
         User|error user = check database:apiHealthDB->queryRow(`SELECT * FROM user WHERE user_id = ${id}`);
         return user;
@@ -30,7 +30,7 @@ function getUser(string id) returns User|error {
     }
 }
 
-function getUserByEmail(string email) returns User|error {
+isolated function getUserByEmail(string email) returns User|error {
     do {
         User|error user = check database:apiHealthDB->queryRow(`SELECT * FROM user WHERE email = ${email}`);
         return user;
@@ -40,12 +40,12 @@ function getUserByEmail(string email) returns User|error {
     }
 }
 
-function isUserExisting(string email, string phoneNumber) returns boolean|error {
+isolated function isUserExisting(string email, string phoneNumber) returns boolean|error {
     User|error user = check database:apiHealthDB->queryRow(`SELECT * FROM user WHERE email = ${email} OR phone_number = ${phoneNumber}`);
     return user is User;
 } 
 
-function createUser(string newId, NewUser newUser, string hashedPassword) returns error? {
+isolated function createUser(string newId, NewUser newUser, string hashedPassword) returns error? {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(`
             INSERT INTO user
@@ -68,7 +68,7 @@ function createUser(string newId, NewUser newUser, string hashedPassword) return
     }
 }
 
-function updateUser(string id, ModifyUser modifyUser) returns User|error {
+isolated function updateUser(string id, ModifyUser modifyUser) returns User|error {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(`
             UPDATE user 
@@ -88,7 +88,7 @@ function updateUser(string id, ModifyUser modifyUser) returns User|error {
     }
 }
 
-function updateUserPassword(string id, string hashedPassword) returns error? {
+isolated function updateUserPassword(string id, string hashedPassword) returns error? {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(`
             UPDATE user 
@@ -104,7 +104,7 @@ function updateUserPassword(string id, string hashedPassword) returns error? {
     }
 }
 
-function deleteUser(string id) returns error? {
+isolated function deleteUser(string id) returns error? {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(`
             DELETE FROM user WHERE user_id = ${id}`);

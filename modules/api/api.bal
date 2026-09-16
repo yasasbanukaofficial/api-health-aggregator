@@ -3,7 +3,7 @@ import ballerina/time;
 import api_health_aggregator.common;
 import api_health_aggregator.utils;
 
-public function getAll(string userId) returns API[]|ApiError|error {
+public isolated function getAll(string userId) returns API[]|ApiError|error {
     API[]|error apis = getAllApi(userId);
 
     if apis is error {
@@ -12,7 +12,7 @@ public function getAll(string userId) returns API[]|ApiError|error {
     return apis;
 }
 
-public function get(string userId, string apiId) returns API|ApiError|error {
+public isolated function get(string userId, string apiId) returns API|ApiError|error {
     API|error api = getApi(userId, apiId);
 
     if api is error {
@@ -21,7 +21,7 @@ public function get(string userId, string apiId) returns API|ApiError|error {
     return api;
 }
 
-public function create(string userId, ModifyAPI modifyAPI) returns API|ApiError|error {
+public isolated function create(string userId, ModifyAPI modifyAPI) returns API|ApiError|error {
 
     if getApiByName(modifyAPI.name) is API {
         return apiError(http:STATUS_CONFLICT, "Error when creating API", string `API already exists with the name ${modifyAPI.name}`);
@@ -44,7 +44,7 @@ public function create(string userId, ModifyAPI modifyAPI) returns API|ApiError|
     };
 }
 
-public function update(string userId, string id, ModifyAPI modifyAPI) returns API|ApiError|error {
+public isolated function update(string userId, string id, ModifyAPI modifyAPI) returns API|ApiError|error {
     API|error updatedApi = updateApi(userId, id, modifyAPI);
 
     if updatedApi is error {
@@ -57,7 +57,7 @@ public function update(string userId, string id, ModifyAPI modifyAPI) returns AP
     return updatedApi;
 }
 
-public function delete(string userId, string id) returns common:DeletedResponse|ApiError|error {
+public isolated function delete(string userId, string id) returns common:DeletedResponse|ApiError|error {
     error? result = deleteApi(userId, id);
 
     if result is error {

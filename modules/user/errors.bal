@@ -7,7 +7,7 @@ public type UserError record {|
     common:ErrorDetails body;
 |};
 
-public function userError(int statusCode, string msg, string? details = ()) returns UserError {
+public isolated function userError(int statusCode, string msg, string? details = ()) returns UserError {
     return {
         status: new http:DefaultStatus(statusCode),
         body: {

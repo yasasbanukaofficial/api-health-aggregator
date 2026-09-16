@@ -7,7 +7,7 @@ public type ApiError record {|
     common:ErrorDetails body;
 |};
 
-public function apiError(int statusCode, string msg, string? details = ()) returns ApiError {
+public isolated function apiError(int statusCode, string msg, string? details = ()) returns ApiError {
     return {
         status: new http:DefaultStatus(statusCode),
         body: {

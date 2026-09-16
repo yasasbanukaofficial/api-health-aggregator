@@ -3,7 +3,7 @@ import ballerina/time;
 import api_health_aggregator.common;
 import api_health_aggregator.utils;
 import ballerina/crypto;
-public function get(string id) returns UserResponse|UserError|error {
+public isolated function get(string id) returns UserResponse|UserError|error {
     User|error user = getUser(id);
 
     if user is error {
@@ -13,7 +13,7 @@ public function get(string id) returns UserResponse|UserError|error {
     return mapToUserResponseFromUser(user, "");
 }
 
-public function register(NewUser newUser) returns UserResponse|UserError|error {
+public isolated function register(NewUser newUser) returns UserResponse|UserError|error {
 
     if isUserExisting(newUser.email, newUser.phoneNumber) is true {
         return userError(http:STATUS_CONFLICT, "Error when creating user", string `User already exists with the email ${newUser.email}`);
@@ -34,7 +34,7 @@ public function register(NewUser newUser) returns UserResponse|UserError|error {
 
 }
 
-public function login(AuthUser authUser) returns UserResponse|UserError|error {
+public isolated function login(AuthUser authUser) returns UserResponse|UserError|error {
     User|error existingUser = getUserByEmail(authUser.email);
     if existingUser is error {
         return userError(http:STATUS_NOT_FOUND, "Login Failed", existingUser.message());
@@ -56,7 +56,7 @@ public function login(AuthUser authUser) returns UserResponse|UserError|error {
 }
 
 
-public function update(string userId, ModifyUser modifyUser) returns User|UserError|error {
+public isolated function update(string userId, ModifyUser modifyUser) returns User|UserError|error {
     if isUserExisting(modifyUser.email, modifyUser.phoneNumber) is true {
         return userError(http:STATUS_CONFLICT, "Error when updating user", "Update cannot happen because this email or phone number already exists.");
     }
@@ -70,7 +70,7 @@ public function update(string userId, ModifyUser modifyUser) returns User|UserEr
     return updatedUser;
 }
 
-public function updatePassword(string userId, UpdatePassword updatePassword) returns User|UserError|error {
+public isolated function updatePassword(string userId, UpdatePassword updatePassword) returns User|UserError|error {
     User|error existingUser = getUser(userId);
 
     if existingUser is error {
@@ -98,7 +98,7 @@ public function updatePassword(string userId, UpdatePassword updatePassword) ret
     return updatedUser;
 }
 
-public function delete(string userId) returns common:DeletedResponse|UserError|error {
+public isolated function delete(string userId) returns common:DeletedResponse|UserError|error {
     error? deleteError = deleteUser(userId);
 
     if deleteError is error {
@@ -114,7 +114,7 @@ public function delete(string userId) returns common:DeletedResponse|UserError|e
 }
 
 
-function mapToUserResponseFromUser(User user, string jwtToken) returns UserResponse => {userId: user.userId, name: user.name, email: user.email, phoneNumber: user.phoneNumber, jwtToken};
-function mapToUserResponseFromNewUser(NewUser user, string newId, string? jwtToken = ()) returns UserResponse => {userId: newId, name: user.name, email: user.email, phoneNumber: user.phoneNumber, jwtToken: jwtToken};
+isolated function mapToUserResponseFromUser(User user, string jwtToken) returns UserResponse => {userId: user.userId, name: user.name, email: user.email, phoneNumber: user.phoneNumber, jwtToken};
+isolated function mapToUserResponseFromNewUser(NewUser user, string newId, string? jwtToken = ()) returns UserResponse => {userId: newId, name: user.name, email: user.email, phoneNumber: user.phoneNumber, jwtToken: jwtToken};
 
 

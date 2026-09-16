@@ -3,7 +3,7 @@ import ballerina/sql;
 import ballerina/time;
 import api_health_aggregator.database;
 
-function getAllApi(string userId) returns API[]|error {
+isolated function getAllApi(string userId) returns API[]|error {
     do {
         stream<API, sql:Error?> apiStream =
             database:apiHealthDB->query(`SELECT * FROM api WHERE user_id = ${userId}`);
@@ -15,7 +15,7 @@ function getAllApi(string userId) returns API[]|error {
     }
 }
 
-function getApi(string userId, string apiId) returns API|error {
+isolated function getApi(string userId, string apiId) returns API|error {
     do {
         API api = check database:apiHealthDB->queryRow(
             `SELECT * FROM api WHERE api_id = ${apiId} AND user_id = ${userId}`);
@@ -30,7 +30,7 @@ function getApi(string userId, string apiId) returns API|error {
     }
 }
 
-function getApiByName(string name) returns API|error {
+isolated function getApiByName(string name) returns API|error {
     do {
         API api = check database:apiHealthDB->queryRow(
             `SELECT * FROM api WHERE api_name = ${name}`);
@@ -44,7 +44,7 @@ function getApiByName(string name) returns API|error {
     }
 }
 
-function createApi(string newId, string userId, ModifyAPI modifyAPI) returns error? {
+isolated function createApi(string newId, string userId, ModifyAPI modifyAPI) returns error? {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(`
             INSERT INTO api
@@ -59,7 +59,7 @@ function createApi(string newId, string userId, ModifyAPI modifyAPI) returns err
     }
 }
 
-function updateApi(string userId, string id, ModifyAPI modifyAPI) returns API|error {
+isolated function updateApi(string userId, string id, ModifyAPI modifyAPI) returns API|error {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(`
             UPDATE api
@@ -84,7 +84,7 @@ function updateApi(string userId, string id, ModifyAPI modifyAPI) returns API|er
     }
 }
 
-function deleteApi(string userId, string id) returns error? {
+isolated function deleteApi(string userId, string id) returns error? {
     do {
         sql:ExecutionResult result = check database:apiHealthDB->execute(
             `DELETE FROM api WHERE api_id = ${id} AND user_id = ${userId}`);
