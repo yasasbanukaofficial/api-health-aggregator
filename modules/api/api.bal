@@ -87,7 +87,7 @@ public isolated function update(string userId, string id, ModifyAPI modifyAPI) r
     API|error updatedApi = updateApi(userId, id, modifyAPI);
 
     if updatedApi is error {
-        return apiError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when updating API", updatedApi.message());
+        return apiError(http:STATUS_NOT_FOUND, "Error when updating API", updatedApi.message());
     }
 
     return updatedApi;
@@ -97,10 +97,7 @@ public isolated function delete(string userId, string id) returns common:Deleted
     error? result = deleteApi(userId, id);
 
     if result is error {
-        if result.message().includes("not found") {
-            return apiError(http:STATUS_NOT_FOUND, "Error when deleting API", result.message());
-        }
-        return apiError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when deleting API", result.message());
+        return apiError(http:STATUS_NOT_FOUND, "Error when deleting API", result.message());
     }
 
     return <common:DeletedResponse>{
