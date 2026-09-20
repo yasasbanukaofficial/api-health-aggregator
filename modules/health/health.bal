@@ -4,24 +4,24 @@ import ballerina/time;
 
 import api_health_aggregator.utils;
 
-public isolated function getAllHealth(HealthTarget[] targets) returns APIHealth[]|ApiHealthError {
-    future<APIHealth>[] futures = [];
+public isolated function getAllHealth(HealthTarget[] targets) returns APIHealthResponse[]|ApiHealthError {
+    future<APIHealthResponse>[] futures = [];
     foreach HealthTarget t in targets {
-        future<APIHealth> f = start checkHealth(t.apiId, t.apiName, t.apiURL);
+        future<APIHealthResponse> f = start checkHealth(t.apiId, t.apiName, t.apiURL);
         futures.push(f);
     }
 
-    APIHealth[] results = [];
+    APIHealthResponse[] results = [];
     foreach var f in futures {
-        APIHealth|error r = wait f;
-        if r is APIHealth {
+        APIHealthResponse|error r = wait f;
+        if r is APIHealthResponse {
             results.push(r);
         } else {
             log:printError("Unable to check API health", r);
         }
     }
 
-    error? insertError = bulkInsertHealthRecords(results.cloneReadOnly());
+    error? insertError = bulkInsertHealthRecords(from APIHealthResponse r in results select mapToApiHealth(r));
     if insertError is error {
         log:printError("Unable to bulk insert health records", insertError);
     }
@@ -29,12 +29,12 @@ public isolated function getAllHealth(HealthTarget[] targets) returns APIHealth[
     return results;
 }
 
-public isolated function getHealth(string apiId, string apiName, string apiUrl) returns APIHealth|ApiHealthError {
-    APIHealth|error result = checkHealth(apiId, apiName, apiUrl);
+public isolated function getHealth(string apiId, string apiName, string apiUrl) returns APIHealthResponse|ApiHealthError {
+    APIHealthResponse|error result = checkHealth(apiId, apiName, apiUrl);
     if result is error {
         return healthError(500, "Unable to check API health", result.message());
     }
-    future<error?> _ = start insertHealthRecord(result.cloneReadOnly());
+    future<error?> _ = start insertHealthRecord(mapToApiHealth(result).cloneReadOnly());
     return result;
 }
 
@@ -42,7 +42,7 @@ public transactional isolated function seedHealthCheck(string apiId, string apiU
     check addSeedHealthData(utils:generateUUID(), apiId);
 }
 
-isolated function checkHealth(string apiId, string apiName, string apiUrl) returns APIHealth {
+isolated function checkHealth(string apiId, string apiName, string apiUrl) returns APIHealthResponse {
     do {
         final http:Client apiClient = check new(apiUrl, {
             timeout: 3
@@ -68,7 +68,7 @@ isolated function checkHealth(string apiId, string apiName, string apiUrl) retur
             statusCode = resp.statusCode;
         }
 
-        return <APIHealth> {
+        return <APIHealthResponse> {
             apiHealthId: utils:generateUUID(),
             apiName,
             status,
@@ -78,7 +78,7 @@ isolated function checkHealth(string apiId, string apiName, string apiUrl) retur
             apiId
         };
     } on fail {
-        return <APIHealth> {
+        return <APIHealthResponse> {
             apiHealthId: utils:generateUUID(),
             apiName,
             status: "ERROR OCCURREDD",
@@ -88,4 +88,15 @@ isolated function checkHealth(string apiId, string apiName, string apiUrl) retur
             apiId
         };
     }
+}
+
+isolated function mapToApiHealth(APIHealthResponse response) returns APIHealth {
+    return <APIHealth> {
+        apiHealthId: response.apiHealthId,
+        status: response.status,
+        statusCode: response.statusCode,
+        responseTime: response.responseTime,
+        checkedAt: response.checkedAt,
+        apiId: response.apiId
+    };
 }

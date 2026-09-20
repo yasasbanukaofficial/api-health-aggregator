@@ -34,7 +34,7 @@ public isolated function getApiUrl(string userId, string apiId) returns string|A
 
 
 
-public isolated function getAllHealth(string userId) returns health:APIHealth[]|ApiError|health:ApiHealthError {
+public isolated function getAllHealth(string userId) returns health:APIHealthResponse[]|ApiError|health:ApiHealthError {
     API[]|ApiError apis = getAll(userId);
     if apis is ApiError {
         return apis;
@@ -43,7 +43,7 @@ public isolated function getAllHealth(string userId) returns health:APIHealth[]|
     return health:getAllHealth(targets);
 }
 
-public isolated function getHealth(string userId, string apiId) returns health:APIHealth|ApiError|health:ApiHealthError {
+public isolated function getHealth(string userId, string apiId) returns health:APIHealthResponse|ApiError|health:ApiHealthError {
     API|error existingAPI = getApi(userId, apiId);
     if existingAPI is error {
         return apiError(http:STATUS_NOT_FOUND, "Error when fetching API", existingAPI.message());
