@@ -1,8 +1,8 @@
 import ballerina/http;
+import ballerina/log;
 import ballerina/time;
 
 import api_health_aggregator.utils;
-
 
 public isolated function getAllHealth(HealthTarget[] targets) returns APIHealth[]|ApiHealthError {
     future<APIHealth>[] futures = [];
@@ -17,6 +17,12 @@ public isolated function getAllHealth(HealthTarget[] targets) returns APIHealth[
             results.push(r);
         }
     }
+
+    error? insertError = bulkInsertHealthRecords(results.cloneReadOnly());
+    if insertError is error {
+        log:printError("Unable to bulk insert health records", insertError);
+    }
+
     return results;
 }
 
@@ -25,6 +31,7 @@ public isolated function getHealth(string apiId, string apiName, string apiUrl) 
     if result is error {
         return healthError(500, "Unable to check API health", result.message());
     }
+    future<error?> _ = start insertHealthRecord(result.cloneReadOnly());
     return result;
 }
 
