@@ -3,11 +3,16 @@ import ballerina/sql;
 import api_health_aggregator.database;
 import ballerina/time;
 
-transactional isolated function addSeedHealthData(string apiId, string apiHealthId) returns error? {
+transactional isolated function addSeedHealthData(string apiHealthId, string apiId) returns error? {
     do {
         sql:ExecutionResult rslt = check database:apiHealthDB->execute(
             `INSERT INTO api_health
-            VALUES (${apiHealthId}, 'UNKNOWN', null, null, ${time:utcNow()}, ${apiHealthId})`
+            VALUES (${apiHealthId},
+                    'UNKNOWN', 
+                    null, 
+                    null, 
+                    ${time:utcNow()}, 
+                    ${apiId})`
         );
 
         if rslt.affectedRowCount == 0 {

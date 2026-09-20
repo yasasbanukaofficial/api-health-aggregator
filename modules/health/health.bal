@@ -28,7 +28,7 @@ public isolated function getHealth(string apiId, string apiName, string apiUrl) 
     return result;
 }
 
-public transactional isolated function seedHealthData(string apiId) returns error? {
+public transactional isolated function seedHealthCheck(string apiId, string apiURL) returns error? {
     check addSeedHealthData(utils:generateUUID(), apiId);
 }
 

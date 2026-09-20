@@ -78,7 +78,7 @@ public isolated function create(string userId, ModifyAPI modifyAPI) returns API|
 isolated function createApiAndHealth(string newId, string userId, ModifyAPI modifyAPI) returns error? {
     transaction {
         check createApi(newId, userId, modifyAPI);
-        check health:seedHealthData(newId);
+        check health:seedHealthCheck(newId, modifyAPI.apiURL);
         check commit;
     }
 }
