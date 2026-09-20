@@ -55,7 +55,7 @@ public isolated function create(string userId, ModifyAPI modifyAPI) returns API|
     API|error existingAPI = getApiByUrl(userId, modifyAPI.apiURL);
     
     if existingAPI is API {
-        return apiError(http:STATUS_CONFLICT, "Error when creating API", string `API already exists with the name ${modifyAPI.name}`);
+        return apiError(http:STATUS_CONFLICT, "Error when creating API", string `API already exists with the current url of ${modifyAPI.apiURL}`);
     }
 
     string newId = utils:generateUUID();
