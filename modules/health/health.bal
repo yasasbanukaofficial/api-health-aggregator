@@ -4,24 +4,24 @@ import ballerina/time;
 import api_health_aggregator.utils;
 
 
-public isolated function getAllHealth(HealthTarget[] targets) returns APIHealthResponse[]|ApiHealthError {
-    future<APIHealthResponse|error>[] futures = [];
+public isolated function getAllHealth(HealthTarget[] targets) returns APIHealth[]|ApiHealthError {
+    future<APIHealth>[] futures = [];
     foreach HealthTarget t in targets {
-        future<APIHealthResponse|error> f = start checkHealth(t.apiId, t.apiName, t.apiURL);
+        future<APIHealth> f = start checkHealth(t.apiId, t.apiName, t.apiURL);
         futures.push(f);
     }
-    APIHealthResponse[] results = [];
+    APIHealth[] results = [];
     foreach var f in futures {
-        APIHealthResponse|error r = wait f;
-        if r is APIHealthResponse {
+        APIHealth|error r = wait f;
+        if r is APIHealth {
             results.push(r);
         }
     }
     return results;
 }
 
-public isolated function getHealth(string apiId, string apiName, string apiUrl) returns APIHealthResponse|ApiHealthError {
-    APIHealthResponse|error result = checkHealth(apiId, apiName, apiUrl);
+public isolated function getHealth(string apiId, string apiName, string apiUrl) returns APIHealth|ApiHealthError {
+    APIHealth|error result = checkHealth(apiId, apiName, apiUrl);
     if result is error {
         return healthError(500, "Unable to check API health", result.message());
     }
@@ -32,7 +32,7 @@ public transactional isolated function seedHealthData(string apiId) returns erro
     check addSeedHealthData(utils:generateUUID(), apiId);
 }
 
-isolated function checkHealth(string apiId, string apiName, string apiUrl) returns APIHealthResponse|error {
+isolated function checkHealth(string apiId, string apiName, string apiUrl) returns APIHealth {
     final http:Client apiClient = check new(apiUrl, {
         timeout: 3
     });
@@ -54,7 +54,8 @@ isolated function checkHealth(string apiId, string apiName, string apiUrl) retur
         statusCode = resp.statusCode;
     }
 
-    return <APIHealthResponse> {
+    return <APIHealth> {
+        apiHealthId: utils:generateUUID(),
         apiName,
         status,
         statusCode,

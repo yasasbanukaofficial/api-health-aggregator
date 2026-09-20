@@ -1,15 +1,10 @@
 import ballerina/time;
+import ballerina/sql;
 public type APIHealth record {|
     readonly string apiHealthId;
-    string status;
-    int statusCode;
-    time:Seconds responseTime;
-    time:Utc checkedAt;
-
-    string apiId;
-|};
-
-public type APIHealthResponse record {|
+    @sql:Column {
+        name: "name"
+    }
     string apiName;
     string status;
     int statusCode;

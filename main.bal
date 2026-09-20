@@ -159,7 +159,7 @@ service / on serviceListener {
             }
         ]
     }
-    resource isolated function get health(http:RequestContext ctx) returns health:APIHealthResponse[]|api:ApiError|health:ApiHealthError|error {
+    resource isolated function get health(http:RequestContext ctx) returns health:APIHealth[]|api:ApiError|health:ApiHealthError|error {
         string userId = check common:getUserIdFromContext(ctx);
         return api:getAllHealth(userId);
     }
@@ -173,7 +173,7 @@ service / on serviceListener {
             }
         ]
     }
-    resource isolated function get health/[string apiId](http:RequestContext ctx) returns health:APIHealthResponse|api:ApiError|health:ApiHealthError|error {
+    resource isolated function get health/[string apiId](http:RequestContext ctx) returns health:APIHealth|api:ApiError|health:ApiHealthError|error {
         string userId = check common:getUserIdFromContext(ctx);
         return api:getHealth(userId, apiId);
     }
