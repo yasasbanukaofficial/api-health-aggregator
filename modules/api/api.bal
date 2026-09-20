@@ -87,9 +87,6 @@ public isolated function update(string userId, string id, ModifyAPI modifyAPI) r
     API|error updatedApi = updateApi(userId, id, modifyAPI);
 
     if updatedApi is error {
-        if updatedApi.message().includes("not found") {
-            return apiError(http:STATUS_NOT_FOUND, "Error when updating API", updatedApi.message());
-        }
         return apiError(http:STATUS_INTERNAL_SERVER_ERROR, "Error when updating API", updatedApi.message());
     }
 
