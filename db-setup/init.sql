@@ -17,6 +17,15 @@ CREATE TABLE api_health_aggregator.user (
     created_time DATETIME
 );
 
+CREATE TABLE api_health_aggregator.api_health (
+    api_health_id CHAR(36) PRIMARY KEY,
+    status VARCHAR(20) NOT NULL,
+    status_code INT,
+    response_time DOUBLE,
+    checked_at DATETIME NOT NULL,
+    api_id CHAR(36) NOT NULL REFERENCES api(api_id) ON DELETE CASCADE
+);
+
 INSERT INTO api_health_aggregator.user
     (user_id, user_name, email, phone_number, password, created_time)
 VALUES
@@ -34,15 +43,6 @@ VALUES
     ('7c9e6679-7425-40de-944b-e07fc1f90ae7', 'Authentication API', 'https://api.example.com/auth',          '7c9e6679-7425-40de-944b-e07fc1f90ae8', '2026-09-03 11:35:00'),
     ('8f14e45f-ea2a-41d4-9b1b-2c8f1d6a1234', 'Notification API',   'https://api.example.com/notifications', '8f14e45f-ea2a-41d4-9b1b-2c8f1d6a1235', '2026-09-04 12:50:00'),
     ('9a3d5f72-1b6c-4e89-8d23-7f4a9c0b5678', 'Order API',          'https://api.example.com/orders',        '9a3d5f72-1b6c-4e89-8d23-7f4a9c0b5679', '2026-09-05 14:05:00');
-
-CREATE TABLE api_health_aggregator.api_health (
-    api_health_id CHAR(36) PRIMARY KEY,
-    status VARCHAR(20) NOT NULL,
-    status_code INT,
-    response_time DOUBLE,
-    checked_at DATETIME NOT NULL,
-    api_id CHAR(36) NOT NULL REFERENCES api(api_id) ON DELETE CASCADE
-);
 
 INSERT INTO api_health_aggregator.api_health
     (api_health_id, status, status_code, response_time, checked_at, api_id)
