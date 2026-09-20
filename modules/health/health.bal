@@ -10,11 +10,14 @@ public isolated function getAllHealth(HealthTarget[] targets) returns APIHealth[
         future<APIHealth> f = start checkHealth(t.apiId, t.apiName, t.apiURL);
         futures.push(f);
     }
+
     APIHealth[] results = [];
     foreach var f in futures {
         APIHealth|error r = wait f;
         if r is APIHealth {
             results.push(r);
+        } else {
+            log:printError("Unable to check API health", r);
         }
     }
 
@@ -40,34 +43,49 @@ public transactional isolated function seedHealthCheck(string apiId, string apiU
 }
 
 isolated function checkHealth(string apiId, string apiName, string apiUrl) returns APIHealth {
-    final http:Client apiClient = check new(apiUrl, {
-        timeout: 3
-    });
+    do {
+        final http:Client apiClient = check new(apiUrl, {
+            timeout: 3
+        });
 
-    string status = "ERROR";
-    int statusCode = 404;
+        string status = "ERROR";
+        int statusCode = 404;
 
-    time:Utc startingTime =  time:utcNow();
-    http:Response|error resp = apiClient->get("");
-    time:Utc endingTime =  time:utcNow();
+        time:Utc startingTime =  time:utcNow();
+        http:Response|error resp = apiClient->get("");
+        time:Utc endingTime =  time:utcNow();
 
-    time:Seconds responseTime = time:utcDiffSeconds(endingTime, startingTime);
-    
-    if resp is error {
-        status = "DOWN";
-        statusCode = 404;
-    } else if resp.statusCode >= 200 && resp.statusCode <= 299 {
-        status = "UP";
-        statusCode = resp.statusCode;
+        time:Seconds responseTime = time:utcDiffSeconds(endingTime, startingTime);
+        
+        if resp is error {
+            status = "ERROR OCCURREDD";
+            statusCode = 0;
+        } else if resp.statusCode >= 200 && resp.statusCode <= 299 {
+            status = "UP";
+            statusCode = resp.statusCode;
+        } else {
+            status = "DOWN";
+            statusCode = resp.statusCode;
+        }
+
+        return <APIHealth> {
+            apiHealthId: utils:generateUUID(),
+            apiName,
+            status,
+            statusCode,
+            responseTime,
+            checkedAt: time:utcNow(),
+            apiId
+        };
+    } on fail {
+        return <APIHealth> {
+            apiHealthId: utils:generateUUID(),
+            apiName,
+            status: "ERROR OCCURREDD",
+            statusCode: 0,
+            responseTime: 0,
+            checkedAt: time:utcNow(),
+            apiId
+        };
     }
-
-    return <APIHealth> {
-        apiHealthId: utils:generateUUID(),
-        apiName,
-        status,
-        statusCode,
-        responseTime,
-        checkedAt: time:utcNow(),
-        apiId
-    };
 }
