@@ -53,7 +53,10 @@ public isolated function getHealth(string apiId, string apiName, string apiUrl) 
     if result is error {
         return healthError(500, "Unable to check API health", result.message());
     }
-    future<error?> _ = start insertHealthRecord(mapToApiHealth(result).cloneReadOnly());
+    error? insertError = insertHealthRecord(mapToApiHealth(result).cloneReadOnly());
+    if insertError is error {
+        log:printError("Unable to insert health record", insertError);
+    }
     return result;
 }
 
@@ -75,7 +78,7 @@ isolated function checkHealth(string apiId, string apiName, string apiUrl) retur
         time:Seconds responseTime = time:utcDiffSeconds(endingTime, startingTime);
         
         if resp is error {
-            status = "ERROR OCCURREDD";
+            status = "ERROR OCCURRED";
             statusCode = 0;
         } else if resp.statusCode >= 200 && resp.statusCode <= 299 {
             status = "UP";
@@ -98,7 +101,7 @@ isolated function checkHealth(string apiId, string apiName, string apiUrl) retur
         return <APIHealthResponse> {
             apiHealthId: utils:generateUUID(),
             apiName,
-            status: "ERROR OCCURREDD",
+            status: "ERROR OCCURRED",
             statusCode: 0,
             responseTime: 0,
             checkedAt: time:utcNow(),
