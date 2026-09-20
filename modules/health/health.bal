@@ -4,6 +4,25 @@ import ballerina/time;
 
 import api_health_aggregator.utils;
 
+final isolated map<http:Client> clients = {};
+
+isolated function getApiClient(string apiUrl) returns http:Client|error {
+    lock{
+        http:Client? existingClient = clients[apiUrl];
+        if existingClient !is () {
+            return existingClient;
+        }
+        
+        http:Client newClient = check new(apiUrl, {
+            timeout: 3
+        });
+
+        clients[apiUrl] = newClient;
+
+        return newClient;
+    }    
+};
+
 public isolated function getAllHealth(HealthTarget[] targets) returns APIHealthResponse[]|ApiHealthError {
     future<APIHealthResponse>[] futures = [];
     foreach HealthTarget t in targets {
@@ -44,9 +63,7 @@ public transactional isolated function seedHealthCheck(string apiId, string apiU
 
 isolated function checkHealth(string apiId, string apiName, string apiUrl) returns APIHealthResponse {
     do {
-        final http:Client apiClient = check new(apiUrl, {
-            timeout: 3
-        });
+        final http:Client apiClient = check getApiClient(apiUrl);
 
         string status = "ERROR";
         int statusCode = 404;
