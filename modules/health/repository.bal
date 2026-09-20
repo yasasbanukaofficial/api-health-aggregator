@@ -1,5 +1,5 @@
+import ballerina/log;
 import ballerina/sql;
-import api_health_aggregator.common;
 import api_health_aggregator.database;
 import ballerina/time;
 
@@ -15,7 +15,7 @@ transactional isolated function addSeedHealthData(string apiId, string apiHealth
         }
         
     } on fail error err {
-        common:logError("Failed to create API Health: " + err.message());
+        log:printError("Failed to create API Health: " + err.message());
         return err;
     }
 }

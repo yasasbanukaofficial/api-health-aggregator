@@ -1,6 +1,6 @@
 import ballerina/sql;
 import ballerina/time;
-import api_health_aggregator.common;
+import ballerina/log;
 import api_health_aggregator.database;
 
 isolated function getAllApi(string userId) returns API[]|error {
@@ -10,7 +10,7 @@ isolated function getAllApi(string userId) returns API[]|error {
         API[] apis = check from var api in apiStream select api;
         return apis;
     } on fail error err {
-        common:logError("Failed to fetch APIs: " + err.message());
+        log:printError("Failed to fetch APIs: " + err.message());
         return err;
     }
 }
@@ -22,10 +22,10 @@ isolated function getApi(string userId, string apiId) returns API|error {
         return api;
     } on fail error err {
         if err is sql:NoRowsError {
-            common:logError("API not found: " + err.message());
+            log:printError("API not found: " + err.message());
             return error(string `API with the id: ${apiId} not found`);
         }
-        common:logError("Failed to fetch API: " + err.message());
+        log:printError("Failed to fetch API: " + err.message());
         return err;
     }
 }
@@ -39,7 +39,7 @@ isolated function getApiByUrl(string userId, string apiUrl) returns API|error {
         if err is sql:NoRowsError {
             return error(string `API with the apiUrl: ${apiUrl} not found`);
         }
-        common:logError("Failed to fetch API: " + err.message());
+        log:printError("Failed to fetch API: " + err.message());
         return err;
     }
 }
@@ -54,7 +54,7 @@ isolated function getUrlByApiId(string userId, string apiId) returns string|erro
         if err is sql:NoRowsError {
             return error(string `API with the api Id: ${apiId} not found`);
         }
-        common:logError("Failed to fetch API: " + err.message());
+        log:printError("Failed to fetch API: " + err.message());
         return err;
     }
 } 
@@ -70,7 +70,7 @@ isolated function createApi(string newId, string userId, ModifyAPI modifyAPI) re
             return error("SQL error when creating the api");
         }
     } on fail error err {
-        common:logError("Failed to create API: " + err.message());
+        log:printError("Failed to create API: " + err.message());
         return err;
     }
 }
@@ -92,10 +92,10 @@ isolated function updateApi(string userId, string id, ModifyAPI modifyAPI) retur
 
     } on fail error err {
         if err is sql:NoRowsError {
-            common:logError("API not found after update: " + err.message());
+            log:printError("API not found after update: " + err.message());
             return error(string `API with the id: ${id} not found`);
         }
-        common:logError("Failed to update API: " + err.message());
+        log:printError("Failed to update API: " + err.message());
         return err;
     }
 }
@@ -110,7 +110,7 @@ isolated function deleteApi(string userId, string id) returns error? {
         }
 
     } on fail error err {
-        common:logError("Failed to delete API: " + err.message());
+        log:printError("Failed to delete API: " + err.message());
         return err;
     }
 }

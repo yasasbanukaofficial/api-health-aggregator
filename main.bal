@@ -3,6 +3,7 @@ import api_health_aggregator.common;
 import api_health_aggregator.user;
 
 import ballerina/http;
+import ballerina/log;
 import api_health_aggregator.health;
 
 configurable int SERVICE_PORT = ?;
@@ -16,7 +17,7 @@ listener http:Listener serviceListener = new (SERVICE_PORT);
 }
 service / on serviceListener {
     function init() {
-        common:logInfo(string `Web Service has started on port ${SERVICE_PORT}: http://localhost:${SERVICE_PORT}/`);
+        log:printInfo(string `Web Service has started on port ${SERVICE_PORT}: http://localhost:${SERVICE_PORT}/`);
     }
 
     resource isolated function get .() returns string {
